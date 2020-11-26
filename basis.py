@@ -31,7 +31,7 @@ def g2y(app, y): #regular graph coordinate --> tkinter y coordinate
                  #assumes (app.width/2, app.height/2) is origin 
     return (app.origin[1])-y
 
-def vecs2Graph(app, vecs): #takes in 2d list of vecs
+def vecs2Graph(app, vecs): #takes in 2d ndarray of vecs [x,y,z]
     graphPoints = np.empty((0,2))
 
     for vec in vecs:
@@ -44,7 +44,7 @@ def vecs2Graph(app, vecs): #takes in 2d list of vecs
 
     return graphPoints
 
-def graph2Vecs(app, graph):
+def graph2Vecs(app, graph): #takes in 2d ndarray of points [x,y]
     ox, oy = app.origin
     vecs = np.empty((0,3))
 
@@ -70,6 +70,7 @@ def graph2Vecs(app, graph):
     #matrix A 
     A = np.array([[math.cos(app.xAxisAngle), math.cos(app.yAxisAngle)],
                   [math.sin(app.xAxisAngle), math.sin(app.yAxisAngle)]])
+
     Ainv = np.linalg.inv(A)
 
     for point in graph: 
@@ -85,6 +86,7 @@ def graph2Vecs(app, graph):
         #print(v)
         v = np.append(v, 0) #add on z coord 
         vecs = np.append(vecs, [v], axis=0)
+
     return vecs
 
 def appStarted(app):
@@ -112,6 +114,8 @@ def appStarted(app):
     app.drawFloor = False
     app.floorCoords = np.empty((0,2))
     app.tempFloorCoords = np.empty((0,2))
+
+    app.drawWalls = False
 
 def keyPressed(app, event):
 
@@ -171,29 +175,22 @@ def keyPressed(app, event):
     
     #update cubepoints 
     app.CUBEPOINTS = vecs2Graph(app, app.CUBE)
+
+    #update floor
+    if app.floorCoords.shape[0]==4:
+        app.floorCoords = vecs2Graph(app, app.floorVecs)
+        #print('updated floorcoords')
     #print(app.CUBE)
     #print(app.CUBEPOINTS)
 
-def makeFloor(app): pass
-def floatFloor(app): pass 
-
-def mousePressed(app, event): 
-    #2d arr
-    #print(app.floorCoords.shape[0])
-
-    #this is fine
-    if app.drawFloor and app.floorCoords.shape[0] == 0: #rows
+def makeFloor(app, event): 
+    if app.floorCoords.shape[0] == 0: #rows
         leftTopCoord = np.array([[event.x, event.y]])
         app.floorCoords = np.append(app.floorCoords, leftTopCoord, axis=0)
         for i in range(4):
             app.tempFloorCoords = np.append(app.tempFloorCoords, 
                                             leftTopCoord, axis=0)
-        #print(app.floorCoords)
-        #print(graph2Vecs(app, app.floorCoords))
-        #print(app.tempFloorCoords)
-
-    #need to fix this. 
-    elif app.drawFloor and app.floorCoords.shape[0] == 1: #rows
+    elif app.floorCoords.shape[0] == 1: #rows
         rightBotCoord = np.array([[event.x, event.y]])
 
         tempCoords = np.append(app.floorCoords, rightBotCoord, axis=0)
@@ -221,39 +218,47 @@ def mousePressed(app, event):
         app.floorCoords = np.append(app.floorCoords,leftBotCoord, axis=0)
         app.floorCoords = np.append(app.floorCoords,rightTopCoord, axis=0)
         app.floorCoords = np.append(app.floorCoords,rightBotCoord, axis=0) 
-        
+
+        app.floorVecs = graph2Vecs(app, app.floorCoords) #store for rotation adjustment later
         #print(f'floor: \n{app.floorCoords}')
 
+def floatFloor(app, event): 
+    rightBotCoord = np.array([[event.x, event.y]])
+
+    tempCoords = np.append(app.floorCoords, rightBotCoord, axis=0)
+    tempVecs = graph2Vecs(app, tempCoords)
+
+    leftTopVec, rightBotVec = tempVecs[0], tempVecs[1]
+
+    #finding [x,y,z] of rightTopCoord 
+    xRT = rightBotVec[0]
+    yRT = leftTopVec[1]
+    zRT = 0 
+    rightTopVec = np.array([[xRT,yRT,zRT]])
+
+    #finding [x,y,z] of leftBotCoord 
+    xLB = leftTopVec[0] # rightBotVec[0]
+    yLB = rightBotVec[1] #+ leftTopVec[1]
+    zLB = 0
+    leftBotVec = np.array([[xLB, yLB, zLB]])
+
+    tempVecs2 = np.append(rightTopVec, leftBotVec, axis=0)
+    tempCoords2 = vecs2Graph(app, tempVecs2)
+
+    rightTopCoord, leftBotCoord = tempCoords2[0], tempCoords2[1]
+
+    app.tempFloorCoords[1] = leftBotCoord
+    app.tempFloorCoords[2] = rightTopCoord
+    app.tempFloorCoords[3] = rightBotCoord 
+
+def mousePressed(app, event): 
+    if app.drawFloor: 
+        makeFloor(app, event)
+    
 def mouseMoved(app, event): 
     if app.drawFloor and app.floorCoords.shape[0]==1:
-        rightBotCoord = np.array([[event.x, event.y]])
-
-        tempCoords = np.append(app.floorCoords, rightBotCoord, axis=0)
-        tempVecs = graph2Vecs(app, tempCoords)
-
-        leftTopVec, rightBotVec = tempVecs[0], tempVecs[1]
-
-        #finding [x,y,z] of rightTopCoord 
-        xRT = rightBotVec[0]
-        yRT = leftTopVec[1]
-        zRT = 0 
-        rightTopVec = np.array([[xRT,yRT,zRT]])
-
-        #finding [x,y,z] of leftBotCoord 
-        xLB = leftTopVec[0] # rightBotVec[0]
-        yLB = rightBotVec[1] #+ leftTopVec[1]
-        zLB = 0
-        leftBotVec = np.array([[xLB, yLB, zLB]])
-
-        tempVecs2 = np.append(rightTopVec, leftBotVec, axis=0)
-        tempCoords2 = vecs2Graph(app, tempVecs2)
-
-        rightTopCoord, leftBotCoord = tempCoords2[0], tempCoords2[1]
-
-        app.tempFloorCoords[1] = leftBotCoord
-        app.tempFloorCoords[2] = rightTopCoord
-        app.tempFloorCoords[3] = rightBotCoord
-
+        floatFloor(app, event)
+    
 def redrawAll(app, canvas):
     #floor 
     if app.drawFloor and app.floorCoords.shape[0]==1:
@@ -284,11 +289,9 @@ def redrawAll(app, canvas):
     yAxisy = g2y(app, (app.height)*(math.sin(app.yAxisAngle)))
     canvas.create_line(ox, oy, yAxisx, yAxisy)
 
-    '''
     for point in app.CUBEPOINTS:
         canvas.create_oval(point[0]-3, point[1]-3, point[0]+3, point[1]+3, fill='blue')
-    '''
-
+    
     CUBE = app.CUBE
     for i in range(app.CUBEPOINTS.shape[0]): #rows
         p1 = app.CUBEPOINTS[i]
