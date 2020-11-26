@@ -35,6 +35,50 @@ print(math.cos(deg2Rad(90)), math.sin(deg2Rad(90)))
 print(math.cos(deg2Rad(330)), math.sin(deg2Rad(330)))
 '''
 
+ #print(tx,ty)
+
+    #need to find length, and angle 
+    #length: math.sqrt(e1[0]**2 + e1[1]**2 + e1[2]**2)
+
+    #angle: 
+        #find angle between x and y (vectors)
+        # x dot y = |x| |y| cos theta
+        #for z, just move the thing up or down LOL 
+
+    '''
+    '''
+
+    #for vec in STD3: 
+    #   print(vec)
+        #vec[0] is x coord -- add vec[0]*math.sin(deg2Rad(210)) to totalY
+        #                  -- add vec[0]*math.cos(deg2Rad(210)) to totalX
+        #totalY += vec[0]*math.sin(deg2Rad(210+r))
+        #totalX += vec[0]*math.cos(deg2Rad(210+r))
+
+        #totalY = g2y(app, totalY)
+        #totalX = g2x(app, totalX)
+
+        #vec[1] is y coord -- add vec[1]*math.sin(deg2Rad(330)) to totalY
+        #                  -- add vec[1]*math.cos(deg2Rad(330)) to totalX 
+        #totalY += vec[1]*math.sin(deg2Rad(330+r))
+        #print(vec[1]*math.sin(deg2Rad(330+r)))
+
+        #totalY = g2y(app, totalY)
+        #totalX += vec[1]*math.cos(deg2Rad(330+r))
+        #print(vec[1]*math.cos(deg2Rad(330+r)))
+
+        #vec[2] is z coord -- add vec[2]to totalY
+        #totalY += vec[2]
+
+        #print(totalX, totalY)
+
+        #adjust
+        #totalX = g2x(app, totalX)
+        #totalY = g2y(app, totalY)
+        #print(vec[0], vec[1], vec[2])
+
+        #canvas.create_line(ox,oy, totalX, totalY, fill='red', width=5
+
 def drawVector(app, canvas):
     #origin
     ox, oy = app.width/2, app.height/2

@@ -23,17 +23,22 @@ def deg2Rad(deg):
 
 def g2x(app, x): #regular graph coordinate --> tkinter x coordinate
                  #assumes (app.width/2, app.height/2) is origin
-    return x+(app.width/2)
+    return x+(app.origin[0])
 
 def g2y(app, y): #regular graph coordinate --> tkinter y coordinate
                  #assumes (app.width/2, app.height/2) is origin 
-    return (app.height/2)-y
+    return (app.origin[1])-y
 
 def appStarted(app):
     app.rotationAngle = 0
 
-    app.xAngle = deg2Rad(210+app.rotationAngle)
-    app.yAngle = deg2Rad(330+app.rotationAngle)
+    app.origin = (app.width/2, app.height/2)
+
+    app.xAxisDeg = 200
+    app.yAxisDeg = 340
+
+    app.xAngle = deg2Rad(app.xAxisDeg+app.rotationAngle)
+    app.yAngle = deg2Rad(app.yAxisDeg+app.rotationAngle)
 
     app.CUBE = np.array([[0,0,0],
                         [50,0,0],
@@ -49,7 +54,21 @@ def appStarted(app):
 def keyPressed(app, event):
     if event.key == 'r':
         app.rotationAngle+=10
+        app.xAngle = deg2Rad(app.xAxisDeg+app.rotationAngle)
+        app.yAngle = deg2Rad(app.yAxisDeg+app.rotationAngle)
         #moves the axes/cube 
+    
+    elif event.key == '2':
+        #try shifting origin? 
+        #app.origin = (app.origin[0]+20, app.origin[1]+20)
+        #works 
+
+        #try changing initial angles? 
+        app.xAxisDeg-=10
+        app.yAxisDeg+=10
+        app.xAngle = deg2Rad(app.xAxisDeg+app.rotationAngle)
+        app.yAngle = deg2Rad(app.yAxisDeg+app.rotationAngle)
+        #works 
     
     elif event.key == 'w':
         for row in app.CUBE: 
@@ -85,31 +104,25 @@ def keyPressed(app, event):
     app.CUBEPOINTS = vecs2Graph(app, app.CUBE)
 
 def redrawAll(app, canvas):
-    r = app.rotationAngle
-
-    #origin
-    ox, oy = app.width/2, app.height/2
+    ox, oy = app.origin
 
     #z axis
     canvas.create_line(ox,oy, ox, 0)
 
     #x axis
-    xAngle = deg2Rad(210+r)
-    xAxisx = g2x(app, app.width*(math.cos(xAngle)))
-    xAxisy = g2y(app, app.height*(math.sin(xAngle)))
+    xAxisx = g2x(app, app.width*(math.cos(app.xAngle)))
+    xAxisy = g2y(app, app.height*(math.sin(app.xAngle)))
     canvas.create_line(ox, oy, xAxisx, xAxisy)
 
     #y axis
-    yAngle = deg2Rad(330+r)
-    yAxisx = g2x(app, (app.width)*(math.cos(yAngle)))
-    yAxisy = g2y(app, (app.height)*(math.sin(yAngle)))
+    yAxisx = g2x(app, (app.width)*(math.cos(app.yAngle)))
+    yAxisy = g2y(app, (app.height)*(math.sin(app.yAngle)))
     canvas.create_line(ox, oy, yAxisx, yAxisy)
 
     '''
     for point in app.CUBEPOINTS:
         canvas.create_oval(point[0]-3, point[1]-3, point[0]+3, point[1]+3, fill='blue')
     '''
-    #print(app.CUBEPOINTS.shape[0])
 
     CUBE = app.CUBE
     for i in range(app.CUBEPOINTS.shape[0]): #rows
@@ -123,74 +136,21 @@ def redrawAll(app, canvas):
             ): 
     
                 canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill = 'blue')
-                                    
-    #drawBasis(app, canvas)
-    #drawVector(app, canvas)
 
 def vecs2Graph(app, vecs):
-    #origin
-    ox, oy = app.width/2, app.height/2
-
-    #rotation angle
-    r = app.rotationAngle
-
-    xAngle = deg2Rad(210+r)
-    yAngle = deg2Rad(330+r) 
+    ox, oy = app.origin
 
     graphPoints = np.empty((0,2))
+
     for vec in vecs:
-        tx = vec[0]*math.cos(xAngle) + vec[1]*(math.cos(yAngle))
-        ty = vec[0]*math.sin(xAngle) + vec[1]*(math.sin(yAngle)) + vec[2]
+        tx = vec[0]*math.cos(app.xAngle) + vec[1]*(math.cos(app.yAngle))
+        ty = vec[0]*math.sin(app.xAngle) + vec[1]*(math.sin(app.yAngle)) + vec[2]
         tx = g2x(app, tx)
         ty = g2y(app, ty)
         newPoint = np.array([[tx,ty]])
         graphPoints = np.append(graphPoints, newPoint, axis=0)
 
     return graphPoints
-
-    #print(tx,ty)
-
-    #need to find length, and angle 
-    #length: math.sqrt(e1[0]**2 + e1[1]**2 + e1[2]**2)
-
-    #angle: 
-        #find angle between x and y (vectors)
-        # x dot y = |x| |y| cos theta
-        #for z, just move the thing up or down LOL 
-
-    '''
-    '''
-
-    #for vec in STD3: 
-    #   print(vec)
-        #vec[0] is x coord -- add vec[0]*math.sin(deg2Rad(210)) to totalY
-        #                  -- add vec[0]*math.cos(deg2Rad(210)) to totalX
-        #totalY += vec[0]*math.sin(deg2Rad(210+r))
-        #totalX += vec[0]*math.cos(deg2Rad(210+r))
-
-        #totalY = g2y(app, totalY)
-        #totalX = g2x(app, totalX)
-
-        #vec[1] is y coord -- add vec[1]*math.sin(deg2Rad(330)) to totalY
-        #                  -- add vec[1]*math.cos(deg2Rad(330)) to totalX 
-        #totalY += vec[1]*math.sin(deg2Rad(330+r))
-        #print(vec[1]*math.sin(deg2Rad(330+r)))
-
-        #totalY = g2y(app, totalY)
-        #totalX += vec[1]*math.cos(deg2Rad(330+r))
-        #print(vec[1]*math.cos(deg2Rad(330+r)))
-
-        #vec[2] is z coord -- add vec[2]to totalY
-        #totalY += vec[2]
-
-        #print(totalX, totalY)
-
-        #adjust
-        #totalX = g2x(app, totalX)
-        #totalY = g2y(app, totalY)
-        #print(vec[0], vec[1], vec[2])
-
-        #canvas.create_line(ox,oy, totalX, totalY, fill='red', width=5
 
 runApp(width=600, height=600)
 
