@@ -45,7 +45,7 @@ def keyReleased(self, event): pass
        
 def mousePressed(self, event): 
     #2d arr
-    print(self.floorCoords.shape[0])
+    #print(self.floorCoords.shape[0])
     if not self.drawFloor:
         newCirc = np.array([[event.x, event.y]]) 
         self.circs = np.append(self.circs, newCirc, axis=0) #add a row 
