@@ -89,45 +89,9 @@ def graph2Vecs(app, graph, z=0): #takes in 2d ndarray of points [x,y]
 
     return vecs
 
-def rotateVec(app, vec, angle, axis): #3D vecs? 
-    if angle%360 == 0:
-        return vec 
-
-    a = deg2Rad(angle)
-
-    #x,y,z = vec[0], vec[1], vec[2]
-    #x,y,z = 0,0,1 rotate around z axis
-
-    x,y,z = axis 
-
-    #rotation matrix formula from 
-    #https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/rotate3d()
-
-    #first row
-    r11 = 1 + (1-math.cos(a))*(x**2 - 1)
-    r12 = z*math.sin(a) + x*y*(1-math.cos(a))
-    r13 = -y*math.sin(a) + x*z*(1-math.cos(a))
-    
-    #second row 
-    r21 = -z*math.sin(a) + x*y*(1-math.cos(a))
-    r22 = 1 + (1-math.cos(a))*(y**2 - 1)
-    r23 = x*math.sin(a) + y*z*(1-math.cos(a))
-
-    #third row 
-    r31 = y*math.sin(a) + x*z*(1-math.cos(a))
-    r32 = -x*math.sin(a) + y*z*(1-math.cos(a))
-    r33 = 1 + (1-math.cos(a))*(z**2 - 1)
-
-    #rotation matrix 
-    R = np.array([[r11, r12, r13], 
-                  [r21, r22, r23],
-                  [r31, r32, r33]])
-
-    rotatedVec = R @ vec
-    return rotatedVec
-
 def appStarted(app):
     app.rotationAngle = 0
+    app.rotationRadius = app.width/2
 
     app.origin = (app.width/2, app.height/2)
 
@@ -152,7 +116,7 @@ def appStarted(app):
     app.floorCoords = np.empty((0,2))
     app.tempFloorCoords = np.empty((0,2))
 
-    #app.drawWalls = False
+    app.drawWalls = False
     app.leftWallCoords = np.empty((0,2))
     app.rightWallCoords = np.empty((0,2))
     app.tempLeftWallCoords = np.empty((0,2))
@@ -160,31 +124,14 @@ def appStarted(app):
 
     app.wallHeight = None
 
-    #x axis
-    #xAxisx = g2x(app, app.width*(math.cos(app.xAxisAngle)))
-    #xAxisy = g2y(app, app.height*(math.sin(app.xAxisAngle)))
-    #canvas.create_line(ox, oy, xAxisx, xAxisy)
-
-    #y axis
-    #yAxisx = g2x(app, (app.width)*(math.cos(app.yAxisAngle)))
-    #yAxisy = g2y(app, (app.height)*(math.sin(app.yAxisAngle)))
-    #canvas.create_line(ox, oy, yAxisx, yAxisy)
-
-    app.xAxisVec = np.array([abs(app.width*math.cos(app.xAxisAngle)), 0,0])
-    app.yAxisVec = np.array([0, abs(app.width*math.sin(app.yAxisAngle)),0])
+    app.wallClicks = 0
 
 def keyPressed(app, event):
 
     if event.key == '1':
         app.drawFloor = not app.drawFloor 
         app.floorCoords = np.empty((0,2))
-        app.tempFloorCoords = np.empty((0,2))
-        app.leftWallCoords = np.empty((0,2))
-        app.rightWallCoords = np.empty((0,2))
-        app.tempLeftWallCoords = np.empty((0,2))
-        app.tempRightWallCoords = np.empty((0,2))
-        app.wallHeight = None
-        #app.drawWalls = app.drawFloor
+        app.tempFloorCoords = np.empty((0,2)) 
         #print(f'app.drawfloor: {app.drawFloor}')
 
     elif event.key == '2':
@@ -193,53 +140,28 @@ def keyPressed(app, event):
         #works 
 
         #try changing initial angles? 
-        app.xAxisInitAngle-=10
-        app.yAxisInitAngle+=10
+        #if (math.pi <= app.xAxisAngle+5 <= 2*math.pi and
+        #    math.pi <= app.yAxisAngle-5 <= 2*math.pi): 
+        app.xAxisInitAngle+=10
+        app.yAxisInitAngle-=10
         app.xAxisAngle = deg2Rad(app.xAxisInitAngle+app.rotationAngle)
         app.yAxisAngle = deg2Rad(app.yAxisInitAngle+app.rotationAngle)
         #works 
 
     elif event.key == 'r':
         #app.rotationAngle+=10
+        #if (math.pi <= app.xAxisAngle+math.pi/12 <= 2*math.pi and
+        #    math.pi <= app.yAxisAngle-math.pi/12 <= 2*math.pi):  
+        #    app.rotationAngle += 10
+        #else:
+        #    app.rotationAngle -= 5
+        
+        app.xAxisAngle += math.pi/12
+        app.yAxisAngle -= math.pi/12
+
         #app.xAxisAngle = deg2Rad(app.xAxisInitAngle+app.rotationAngle)
-        #app.yAxisAngle = deg2Rad(app.yAxisInitAngle+app.rotationAngle)
-
-        #rotate the cube!!!!!
-        '''
-        testVec = np.array([[100,0, 100]])
-        testCoords = vecs2Graph(app, testVec) 
-        x = testCoords[0][0]
-        y = testCoords[0][1]
-        canvas.create_line(ox, oy, x,y, fill = 'red')
-
-        rotatedVec = rotateVec(app, testVec[0], 180, [0,0,1])
-        rotatedCoords = vecs2Graph(app, [rotatedVec])
-        x = rotatedCoords[0][0]
-        y = rotatedCoords[0][1]
-        canvas.create_line(ox,oy,x,y, fill='pink')
-        '''
-
-        #maybe i should rotate the axes. 
-        #newCube = np.array((0,3))
-        #for vec in app.CUBE[1:]:
-        #    rotatedVec = rotateVec(app, vec, 30, [0,0,1])
-        #    print(rotatedVec)
-        #    print(vec)
-        #    newCube = np.append(newCube, rotatedVec, axis=0)
-        #app.CUBE = newCube
-    
+        #app.yAxisAngle = deg2Rad(app.yAxisInitAngle-app.rotationAngle)
         #moves the axes/cube 
-
-        rotatedXAxisVec = rotateVec(app, app.xAxisVec, 30, [0,0,1])
-        rotatedYAxisVec = rotateVec(app, app.yAxisVec, 30, [0,0,1])
-        app.xAxisVec = rotatedXAxisVec
-        app.yAxisVec = rotatedYAxisVec
-        #app.rotationAngle-=30
-        #app.xAxisAngle = deg2Rad(app.xAxisInitAngle+app.rotationAngle)
-        #app.yAxisAngle = deg2Rad(app.yAxisInitAngle+app.rotationAngle)
-
-        #ok, this seems to work (except for the lengths of the vectors)
-        #now we just need to get the angles from these vecs. 
     
     elif event.key == 'w':
         for row in app.CUBE: 
@@ -278,9 +200,6 @@ def keyPressed(app, event):
     if app.floorCoords.shape[0]==4:
         app.floorCoords = vecs2Graph(app, app.floorVecs)
         #print('updated floorcoords')
-    if app.rightWallCoords.shape[0] == 4:
-        app.rightWallCoords = vecs2Graph(app, app.rightWallVecs)
-        app.leftWallCoords = vecs2Graph(app, app.leftWallVecs)
     #print(app.CUBE)
     #print(app.CUBEPOINTS)
 
@@ -321,9 +240,64 @@ def makeFloor(app, event):
         app.floorCoords = np.append(app.floorCoords,rightBotCoord, axis=0) 
 
         app.floorVecs = graph2Vecs(app, app.floorCoords) #store for rotation adjustment later
+
+        
         #print(f'floor: \n{app.floorCoords}')
+        
         #app.rightWallCoords = np.array([app.floorCoords[2], app.floorCoords[3]])
         #print(app.rightWallCoords)
+
+def makeWalls(app, event):
+
+    #if app.rightWallCoords.shape[0]==2: 
+    #RW1 = app.rightWallCoords[0]
+    #RW3 = app.rightWallCoords[1]
+    #RW2 = np.array([RW3[0], event.y])
+    #RW0 = np.array([RW1[0], RW1[1]+(event.y-RW3[1])])
+    #app.rightWallCoords = np.array([RW0, RW1, RW2, RW3])
+
+    rw2 = app.floorCoords[3]
+    #x y are the same as floorRightBot
+
+    rw2ZCoord = app.floorCoords[3][1] - event.y
+    
+    rw2Vec = graph2Vecs(app, [rw2], rw2ZCoord)
+    #print(rw2Vec) 
+
+    rw0 = app.floorCoords[2]
+    rw0ZCoord = app.floorCoords[2][1] - (rw2ZCoord)
+
+    rw0Vec = graph2Vecs(app, [rw0], rw0ZCoord)
+    #print(rw0Vec)
+
+    app.floorVecs = graph2Vecs(app, app.floorCoords) 
+
+    print('hi')
+    print(app.floorVecs[1][0]-app.floorVecs[3][0])
+    print(rw2Vec[0][0]-rw0Vec[0][0])
+
+    #app.rightWallCoords = vecs2Graph(app, np.array([[rw2Vec], [rw0Vec]]))
+    
+    #rightWall
+    #app.floorVecs = graph2Vecs(app, app.floorCoords) 
+
+    #leftTop = 0
+    #leftBot = 1 don't use 
+    #righTop = 2
+    #rightBot = 3
+
+    #LW uses leftTop and rightTop
+    #LW 0: ? 
+    #LW 1: floorLeftTop
+    #LW 2: ?2
+    #LW 3: floorRightTop 
+
+    #RW uses rightTop and rightBot
+    #RW 0: ?2
+    #RW 1: floorRightTop 
+    #RW 2: event.y 
+    #RW 3: floorRightBot 
+    pass
 
 def floatFloor(app, event): 
     rightBotCoord = np.array([[event.x, event.y]])
@@ -357,10 +331,8 @@ def floatFloor(app, event):
 def mousePressed(app, event): 
     if app.drawFloor: 
         makeFloor(app, event)
-    if app.floorCoords.shape[0]==4 and app.wallHeight==None:
-        app.wallHeight = False
-    if app.wallHeight==False:
-        print(app.wallHeight)
+    if app.drawFloor and app.rightWallCoords.shape[0]==2:
+        print('uhoh')
         #make walls
         app.wallHeight = app.floorCoords[3][1]-event.y
 
@@ -386,21 +358,23 @@ def mousePressed(app, event):
 
         app.leftWallCoords = np.array([lw0, lw1, lw2, lw3])
 
-        #app.drawWalls = False
+        
 
-        app.rightWallVecs = graph2Vecs(app, app.rightWallCoords)
-        app.leftWallVecs = graph2Vecs(app, app.leftWallCoords)
+        app.wallClicks+=1
+        
 
-        #app.wallHeight = h
-
+    #if app.floorCoords.shape[0]==4:
+    #    makeWalls(app, event)
+    #if app.drawFloor and app.drawWalls:
+    #    makeWalls(app, event)
+    
 def mouseMoved(app, event): 
     if app.drawFloor and app.floorCoords.shape[0]==1:
         floatFloor(app, event)
-    if app.floorCoords.shape[0]==4 and app.wallHeight == False:
-        #app.wallHeight = None
-        print(event.y)
-        h = app.floorCoords[3][1] - event.y
-
+    if app.drawFloor and app.floorCoords.shape[0]==4 and app.rightWallCoords.shape[0]<=2:
+        
+        #print(event.y)
+        h = app.floorCoords[3][1]-event.y
         c0,d0 = app.floorCoords[0]
         c1,d1 = app.floorCoords[1]
         c2,d2 = app.floorCoords[2]
@@ -422,7 +396,9 @@ def mouseMoved(app, event):
         lw3 = np.array([c2,d2])
 
         app.tempLeftWallCoords = np.array([lw0, lw1, lw2, lw3])
+        app.rightWallCoords = np.array([app.floorCoords[2], app.floorCoords[3]])
 
+    
 def redrawAll(app, canvas):
     #floor 
     if app.drawFloor and app.floorCoords.shape[0]==1:
@@ -437,39 +413,39 @@ def redrawAll(app, canvas):
         c2,d2 = app.floorCoords[2]
         c3,d3 = app.floorCoords[3]
         canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'yellow')
-        
+        #print(app.rightWallCoords.shape)
         #we drawin a wall now 
-    if (app.wallHeight!=None or app.wallHeight!=False) and app.rightWallCoords.shape[0]==4:
-        #print('wow')
-        #right
-        c0,d0 = app.rightWallCoords[0]
-        c1,d1 = app.rightWallCoords[1]
-        c2,d2 = app.rightWallCoords[2]
-        c3,d3 = app.rightWallCoords[3]
-        canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'green')
+        if app.rightWallCoords.shape[0]<=2:
+            #right
+            #print(app.tempRightWallCoords)
+            c0,d0 = app.tempRightWallCoords[0]
+            c1,d1 = app.tempRightWallCoords[1]
+            c2,d2 = app.tempRightWallCoords[2]
+            c3,d3 = app.tempRightWallCoords[3]
+            canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'green')
+            #print('making temp wlal?')
 
-        #left 
-        c0,d0 = app.leftWallCoords[0]
-        c1,d1 = app.leftWallCoords[1]
-        c2,d2 = app.leftWallCoords[2]
-        c3,d3 = app.leftWallCoords[3]
-        canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'blue')
-    if app.floorCoords.shape[0]==4 and app.tempRightWallCoords.shape[0]==4 and app.wallHeight == False:
-        #print('here')
-        #we never get here 
-        #right
-        c0,d0 = app.tempRightWallCoords[0]
-        c1,d1 = app.tempRightWallCoords[1]
-        c2,d2 = app.tempRightWallCoords[2]
-        c3,d3 = app.tempRightWallCoords[3]
-        canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'green')
+            #left 
+            c0,d0 = app.tempLeftWallCoords[0]
+            c1,d1 = app.tempLeftWallCoords[1]
+            c2,d2 = app.tempLeftWallCoords[2]
+            c3,d3 = app.tempLeftWallCoords[3]
+            canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'blue')
 
-        #left 
-        c0,d0 = app.tempLeftWallCoords[0]
-        c1,d1 = app.tempLeftWallCoords[1]
-        c2,d2 = app.tempLeftWallCoords[2]
-        c3,d3 = app.tempLeftWallCoords[3]
-        canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'blue')
+        else:
+            #right
+            c0,d0 = app.rightWallCoords[0]
+            c1,d1 = app.rightWallCoords[1]
+            c2,d2 = app.rightWallCoords[2]
+            c3,d3 = app.rightWallCoords[3]
+            canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'green')
+
+            #left 
+            c0,d0 = app.leftWallCoords[0]
+            c1,d1 = app.leftWallCoords[1]
+            c2,d2 = app.leftWallCoords[2]
+            c3,d3 = app.leftWallCoords[3]
+            canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'blue')
 
     ox, oy = app.origin
 
@@ -500,31 +476,6 @@ def redrawAll(app, canvas):
                 (CUBE[i][1]==CUBE[j][1] and CUBE[i][2]==CUBE[j][2])
             ): 
                 canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill = 'blue')
-
-    '''
-    testVec = np.array([[100,0, 100]])
-    testCoords = vecs2Graph(app, testVec) 
-    x = testCoords[0][0]
-    y = testCoords[0][1]
-    canvas.create_line(ox, oy, x,y, fill = 'red')
-
-    rotatedVec = rotateVec(app, testVec[0], 180, [0,0,1])
-    rotatedCoords = vecs2Graph(app, [rotatedVec])
-    x = rotatedCoords[0][0]
-    y = rotatedCoords[0][1]
-    canvas.create_line(ox,oy,x,y, fill='pink')
-    '''
-    xAxisCoords = vecs2Graph(app, [app.xAxisVec])
-    x,y = xAxisCoords[0][0], xAxisCoords[0][1]
-    #print(x,y)
-    canvas.create_line(ox,oy,x,y, fill='red')
-
-    yAxisCoords = vecs2Graph(app, [2*app.yAxisVec])
-    x,y = yAxisCoords[0][0], yAxisCoords[0][1]
-    #print(x,y)
-    canvas.create_line(ox,oy,x,y, fill='orange')
-
-
 
 runApp(width=600, height=600)
 
