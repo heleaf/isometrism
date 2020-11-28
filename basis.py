@@ -129,10 +129,16 @@ def rotateVec(app, vec, angle, axis): #3D vecs?
 def appStarted(app):
     app.rotationAngle = 0
 
+    app.xRotationAngle = 0
+    app.yRotationAngle = 0
+
     app.origin = (app.width/2, app.height/2)
 
     app.xAxisInitAngle = 200
     app.yAxisInitAngle = 340
+
+    #app.xAxisInitAngle = 190
+    #app.yAxisInitAngle = 260
 
     app.xAxisAngle = deg2Rad(app.xAxisInitAngle+app.rotationAngle)
     app.yAxisAngle = deg2Rad(app.yAxisInitAngle+app.rotationAngle)
@@ -200,46 +206,19 @@ def keyPressed(app, event):
         #works 
 
     elif event.key == 'r':
-        #app.rotationAngle+=10
-        #app.xAxisAngle = deg2Rad(app.xAxisInitAngle+app.rotationAngle)
-        #app.yAxisAngle = deg2Rad(app.yAxisInitAngle+app.rotationAngle)
+        #rotating cUbE
+        newCube = np.array([[0,0,0]])
+        for vec in app.CUBE[1:]:
+            rotatedVec = rotateVec(app, vec, 10, [0,0,1])
+            #print(rotatedVec)
+            #print(vec)
+            newCube = np.append(newCube, [rotatedVec], axis=0)
+        app.CUBE = newCube
 
-        #rotate the cube!!!!!
-        '''
-        testVec = np.array([[100,0, 100]])
-        testCoords = vecs2Graph(app, testVec) 
-        x = testCoords[0][0]
-        y = testCoords[0][1]
-        canvas.create_line(ox, oy, x,y, fill = 'red')
-
-        rotatedVec = rotateVec(app, testVec[0], 180, [0,0,1])
-        rotatedCoords = vecs2Graph(app, [rotatedVec])
-        x = rotatedCoords[0][0]
-        y = rotatedCoords[0][1]
-        canvas.create_line(ox,oy,x,y, fill='pink')
-        '''
-
-        #maybe i should rotate the axes. 
-        #newCube = np.array((0,3))
-        #for vec in app.CUBE[1:]:
-        #    rotatedVec = rotateVec(app, vec, 30, [0,0,1])
-        #    print(rotatedVec)
-        #    print(vec)
-        #    newCube = np.append(newCube, rotatedVec, axis=0)
-        #app.CUBE = newCube
-    
-        #moves the axes/cube 
-
-        rotatedXAxisVec = rotateVec(app, app.xAxisVec, 30, [0,0,1])
-        rotatedYAxisVec = rotateVec(app, app.yAxisVec, 30, [0,0,1])
+        rotatedXAxisVec = rotateVec(app, app.xAxisVec, 10, [0,0,1])
+        rotatedYAxisVec = rotateVec(app, app.yAxisVec, 10, [0,0,1])
         app.xAxisVec = rotatedXAxisVec
         app.yAxisVec = rotatedYAxisVec
-        #app.rotationAngle-=30
-        #app.xAxisAngle = deg2Rad(app.xAxisInitAngle+app.rotationAngle)
-        #app.yAxisAngle = deg2Rad(app.yAxisInitAngle+app.rotationAngle)
-
-        #ok, this seems to work (except for the lengths of the vectors)
-        #now we just need to get the angles from these vecs. 
     
     elif event.key == 'w':
         for row in app.CUBE: 

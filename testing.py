@@ -79,6 +79,82 @@ print(math.cos(deg2Rad(330)), math.sin(deg2Rad(330)))
 
         #canvas.create_line(ox,oy, totalX, totalY, fill='red', width=5
 
+'''
+        #print(app.rotationAngleX, app.rotationAngleY)
+        #app.xAxisInitAngle -= (xAxisTheta*180/math.pi)
+        #app.yAxisInitAngle -= (yAxisTheta*180/math.pi)
+
+        #app.xAxisAngle = deg2Rad((xAxisTheta*180/math.pi))
+        #app.yAxisAngle = deg2Rad((yAxisTheta*180/math.pi))
+
+        #app.xAxisAngle = deg2Rad(app.xAxisInitAngle - (xAxisTheta*180/math.pi))
+        #app.yAxisAngle = deg2Rad(app.yAxisInitAngle - (yAxisTheta*180/math.pi))
+        #app.yAxisAngle = deg2Rad(app.yAxisInitAngle+app.rotationAngleX)
+        #app.xAxisAngle = deg2Rad(app.xAxisInitAngle+app.rotationAngleY)
+
+
+        #find angle to norm ? 
+
+
+        
+        #yAxisCoords = vecs2Graph(app, [app.yAxisVec])[0]
+
+        #print(xAxisCoords)
+        #print(yAxisCoords)
+        #app.rotationAngle-=30
+        #app.xAxisAngle = deg2Rad(app.xAxisInitAngle+app.rotationAngle)
+        #app.yAxisAngle = deg2Rad(app.yAxisInitAngle+app.rotationAngle)
+
+        #ok, this seems to work (except for the lengths of the vectors)
+        #now we just need to get the angles from these vecs. 
+
+                #print(xAxisTheta, yAxisTheta)
+
+        
+        print('x')
+        print(f'rotated by {xAxisTheta*180/math.pi}')
+        print(f'current x axis angle {app.xAxisInitAngle}')
+        print(f'real axis angle? {app.xAxisInitAngle - xAxisTheta*180/math.pi}')
+
+        print('y')
+        print(f'rotated by {yAxisTheta*180/math.pi}')
+        print(f'current y axis angle {app.yAxisInitAngle}')
+        print(f'real axis angle? {app.yAxisInitAngle - yAxisTheta*180/math.pi}')
+        #print(app.xAxisInitAngle)
+        
+        #app.rotationAngleX = (xAxisTheta*180/math.pi)
+        #app.rotationAngleY = (yAxisTheta*180/math.pi) 
+
+        '''
+        #x axis
+        xAxisx = g2x(app, app.width*(math.cos(app.xAxisAngle)))
+        xAxisy = g2y(app, app.height*(math.sin(app.xAxisAngle)))
+        canvas.create_line(ox, oy, xAxisx, xAxisy)
+
+        '''
+                xAxisCoords = vecs2Graph(app, [app.xAxisVec])[0]
+        #print(app.xAxisVec)
+        #print(rotatedXAxisVec)
+        #print(xAxisCoords)
+        #a,b,c of the vec
+        #print(app.xAxisVec)
+        #print(app.yAxisVec)
+        ax, bx = app.xAxisVec[0], app.xAxisVec[1]
+        xAxisTheta = math.acos(ax/(math.sqrt(ax**2 + bx**2)))
+        #print(xAxisCoords)
+        
+
+        ay, by = app.yAxisVec[0], app.yAxisVec[1]
+        yAxisTheta = math.acos(ay/(math.sqrt(ay**2 + by**2)))
+
+                #app.rotationAngle = 0
+
+        #print(app.xAxisVec)
+
+    elif event.key == 'r':
+    
+        '''
+
 def drawVector(app, canvas):
     #origin
     ox, oy = app.width/2, app.height/2
