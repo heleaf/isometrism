@@ -137,9 +137,6 @@ def appStarted(app):
     app.xAxisInitAngle = 200
     app.yAxisInitAngle = 340
 
-    #app.xAxisInitAngle = 190
-    #app.yAxisInitAngle = 260
-
     app.xAxisAngle = deg2Rad(app.xAxisInitAngle+app.rotationAngle)
     app.yAxisAngle = deg2Rad(app.yAxisInitAngle+app.rotationAngle)
 
@@ -158,26 +155,14 @@ def appStarted(app):
     app.floorCoords = np.empty((0,2))
     app.tempFloorCoords = np.empty((0,2))
 
-    #app.drawWalls = False
+    app.wallHeight = None
     app.leftWallCoords = np.empty((0,2))
     app.rightWallCoords = np.empty((0,2))
     app.tempLeftWallCoords = np.empty((0,2))
     app.tempRightWallCoords = np.empty((0,2))
 
-    app.wallHeight = None
-
-    #x axis
-    #xAxisx = g2x(app, app.width*(math.cos(app.xAxisAngle)))
-    #xAxisy = g2y(app, app.height*(math.sin(app.xAxisAngle)))
-    #canvas.create_line(ox, oy, xAxisx, xAxisy)
-
-    #y axis
-    #yAxisx = g2x(app, (app.width)*(math.cos(app.yAxisAngle)))
-    #yAxisy = g2y(app, (app.height)*(math.sin(app.yAxisAngle)))
-    #canvas.create_line(ox, oy, yAxisx, yAxisy)
-
-    app.xAxisVec = np.array([abs(app.width*math.cos(app.xAxisAngle)), 0,0])
-    app.yAxisVec = np.array([0, abs(app.width*math.sin(app.yAxisAngle)),0])
+    app.xAxisVec = np.array([100,0,0])
+    app.yAxisVec = np.array([0,100,0])
 
 def keyPressed(app, event):
 
@@ -207,9 +192,12 @@ def keyPressed(app, event):
 
     elif event.key == 'r':
         #rotating cUbE
-        newCube = np.array([[0,0,0]])
-        for vec in app.CUBE[1:]:
-            rotatedVec = rotateVec(app, vec, 10, [0,0,1])
+        newCube = np.empty((0,3))
+        for vec in app.CUBE:
+            if vec[0]==vec[1]==vec[2]==0:
+                rotatedVec = vec
+            else:
+                rotatedVec = rotateVec(app, vec, 10, [0,0,1])
             #print(rotatedVec)
             #print(vec)
             newCube = np.append(newCube, [rotatedVec], axis=0)
@@ -471,34 +459,21 @@ def redrawAll(app, canvas):
     CUBE = app.CUBE
     for i in range(app.CUBEPOINTS.shape[0]): #rows
         p1 = app.CUBEPOINTS[i]
+        v1 = app.CUBE[i]
         for j in range(app.CUBEPOINTS.shape[0]): #rows
             p2 = app.CUBEPOINTS[j]
-       
-            if ((CUBE[i][0]==CUBE[j][0] and CUBE[i][1]==CUBE[j][1]) or
-                (CUBE[i][0]==CUBE[j][0] and CUBE[i][2]==CUBE[j][2]) or 
-                (CUBE[i][1]==CUBE[j][1] and CUBE[i][2]==CUBE[j][2])
-            ): 
+            v2 = app.CUBE[j]
+            diffVec = v1-v2 
+            if math.sqrt(diffVec[0]**2 + diffVec[1]**2 + diffVec[2]**2) <= 50: 
                 canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill = 'blue')
 
-    '''
-    testVec = np.array([[100,0, 100]])
-    testCoords = vecs2Graph(app, testVec) 
-    x = testCoords[0][0]
-    y = testCoords[0][1]
-    canvas.create_line(ox, oy, x,y, fill = 'red')
-
-    rotatedVec = rotateVec(app, testVec[0], 180, [0,0,1])
-    rotatedCoords = vecs2Graph(app, [rotatedVec])
-    x = rotatedCoords[0][0]
-    y = rotatedCoords[0][1]
-    canvas.create_line(ox,oy,x,y, fill='pink')
-    '''
+    #rotating axes 
     xAxisCoords = vecs2Graph(app, [app.xAxisVec])
     x,y = xAxisCoords[0][0], xAxisCoords[0][1]
     #print(x,y)
     canvas.create_line(ox,oy,x,y, fill='red')
 
-    yAxisCoords = vecs2Graph(app, [2*app.yAxisVec])
+    yAxisCoords = vecs2Graph(app, [app.yAxisVec])
     x,y = yAxisCoords[0][0], yAxisCoords[0][1]
     #print(x,y)
     canvas.create_line(ox,oy,x,y, fill='orange')

@@ -80,6 +80,22 @@ print(math.cos(deg2Rad(330)), math.sin(deg2Rad(330)))
         #canvas.create_line(ox,oy, totalX, totalY, fill='red', width=5
 
 '''
+        
+        testVec = np.array([[100,0, 100]])
+        testCoords = vecs2Graph(app, testVec) 
+        x = testCoords[0][0]
+        y = testCoords[0][1]
+        canvas.create_line(ox, oy, x,y, fill = 'red')
+
+        rotatedVec = rotateVec(app, testVec[0], 180, [0,0,1])
+        rotatedCoords = vecs2Graph(app, [rotatedVec])
+        x = rotatedCoords[0][0]
+        y = rotatedCoords[0][1]
+        canvas.create_line(ox,oy,x,y, fill='pink')
+        
+    
+
+
         #print(app.rotationAngleX, app.rotationAngleY)
         #app.xAxisInitAngle -= (xAxisTheta*180/math.pi)
         #app.yAxisInitAngle -= (yAxisTheta*180/math.pi)
