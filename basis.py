@@ -2,6 +2,8 @@ import math
 import numpy as np
 from cmu_112_graphics import *
 
+#https://www.math.tamu.edu/~mpilant/math311/ComputerGraphics.pdf 
+
 #origin = (app.width/2, app.height/2)
 # (x,y)
 
@@ -150,6 +152,7 @@ def appStarted(app):
                         [50,50,50]])
 
     app.CUBEPOINTS = vecs2Graph(app, app.CUBE)
+    app.showUnitCube = False
 
     app.drawFloor = False
     app.floorCoords = np.empty((0,2))
@@ -163,6 +166,33 @@ def appStarted(app):
 
     app.xAxisVec = np.array([100,0,0])
     app.yAxisVec = np.array([0,100,0])
+
+    app.drawCubeFloor = False
+    app.cubeFloorVecs = np.empty((0,3))
+    app.tempCubeFloorVecs = np.empty((0,3))
+
+
+    app.sampleCubeFloor = np.array([[300.47989017,  26.98620265,   0.        ],
+                            [300.47989017,  26.98620265,  10.        ],
+                            [ 46.39939357, 298.60952565,   0.        ],
+                            [ 46.39939357, 298.60952565,  10.        ],
+                            [ 46.39939357,  26.98620265,   0.        ],
+                            [ 46.39939357,  26.98620265,  10.        ],
+                            [300.47989017, 298.60952565,   0.        ],
+                            [300.47989017, 298.60952565,  10.        ]])
+    #print(app.sampleCubeFloor.shape)
+    app.sampleCubeFloorCoords = vecs2Graph(app, app.sampleCubeFloor)
+
+    app.sampleCube = np.array([[100, 70,  10],
+                                [150, 70,  10],
+                                [100, 120,  10],
+                                [100,  70,  60],
+                                [150, 120,  10],
+                                [150,  70,  60],
+                                [100, 120,  60],
+                                [150, 120,  60]])
+    app.sampleCubeCoords = vecs2Graph(app, app.sampleCube)
+
 
 def keyPressed(app, event):
 
@@ -190,6 +220,48 @@ def keyPressed(app, event):
         app.yAxisAngle = deg2Rad(app.yAxisInitAngle+app.rotationAngle)
         #works 
 
+    elif event.key == '3':
+        #try rotating the room 
+        if app.drawFloor: 
+            newFloorVecs = np.empty((0,3))
+            for vec in app.floorVecs:
+                if vec[0]==vec[1]==vec[2]==0:
+                    rotatedVec = vec
+                else:
+                    rotatedVec = rotateVec(app, vec, 10, [0,0,1])
+                newFloorVecs = np.append(newFloorVecs, [rotatedVec], axis = 0)
+            app.floorVecs = newFloorVecs 
+
+        if app.wallHeight!=None and app.wallHeight!=False:
+            newRWVecs = np.empty((0,3))
+            for vec in app.rightWallVecs:
+                if vec[0]==vec[1]==vec[2]==0:
+                    rotatedVec = vec
+                else:
+                    rotatedVec = rotateVec(app, vec, 10, [0,0,1])
+                newRWVecs= np.append(newRWVecs, [rotatedVec], axis = 0)
+            app.rightWallVecs = newRWVecs 
+
+            newLWVecs = np.empty((0,3))
+            for vec in app.leftWallVecs:
+                if vec[0]==vec[1]==vec[2]==0:
+                    rotatedVec = vec
+                else:
+                    rotatedVec = rotateVec(app, vec, 10, [0,0,1])
+                newLWVecs = np.append(newLWVecs, [rotatedVec], axis = 0)
+            app.leftWallVecs = newLWVecs 
+
+        #this doesn't work that well. we may need to make the floor out of 'cubes' 
+    
+    elif event.key == '4':
+        app.drawCubeFloor = not app.drawCubeFloor
+        app.cubeFloorVecs = np.empty((0,3))
+        app.tempCubeFloorVecs = np.empty((0,3))
+
+    elif event.key == 'h':
+        #toggle unit cube
+        app.showUnitCube = not app.showUnitCube
+
     elif event.key == 'r':
         #rotating cUbE
         newCube = np.empty((0,3))
@@ -203,6 +275,41 @@ def keyPressed(app, event):
             newCube = np.append(newCube, [rotatedVec], axis=0)
         app.CUBE = newCube
 
+        #custom cube floor
+        if app.cubeFloorVecs.shape[0]==8:
+            newFloorCube = np.empty((0,3))
+            for vec in app.cubeFloorVecs:
+                if vec[0]==vec[1]==vec[2]==0:
+                    rotatedVec = vec
+                else:
+                    rotatedVec = rotateVec(app, vec, 10, [0,0,1])
+                newFloorCube = np.append(newFloorCube, [rotatedVec], axis=0)
+            app.cubeFloorVecs = newFloorCube
+            app.cubeFloorCoords = vecs2Graph(app, app.cubeFloorVecs)
+
+        #sample cube floor
+        newFloorCube = np.empty((0,3))
+        for vec in app.sampleCubeFloor:
+            if vec[0]==vec[1]==vec[2]==0:
+                rotatedVec = vec
+            else:
+                rotatedVec = rotateVec(app, vec, 10, [0,0,1])
+            newFloorCube = np.append(newFloorCube, [rotatedVec], axis=0)
+        app.sampleCubeFloor = newFloorCube
+        app.sampleCubeFloorCoords = vecs2Graph(app, app.sampleCubeFloor) 
+        
+        #sample cube
+        newCube = np.empty((0,3))
+        for vec in app.sampleCube:
+            if vec[0]==vec[1]==vec[2]==0:
+                rotatedVec = vec
+            else:
+                rotatedVec = rotateVec(app, vec, 10, [0,0,1])
+            newCube = np.append(newCube, [rotatedVec], axis=0)
+        app.sampleCube = newCube
+        app.sampleCubeCoords = vecs2Graph(app, app.sampleCube) 
+
+        #for reference, rotating the "axes" of the cube objs
         rotatedXAxisVec = rotateVec(app, app.xAxisVec, 10, [0,0,1])
         rotatedYAxisVec = rotateVec(app, app.yAxisVec, 10, [0,0,1])
         app.xAxisVec = rotatedXAxisVec
@@ -237,7 +344,8 @@ def keyPressed(app, event):
         for row in app.CUBE:
             row[1]+=10
         #move the cube right (y)
-    
+
+   # print(app.CUBE)
     #update cubepoints 
     app.CUBEPOINTS = vecs2Graph(app, app.CUBE)
 
@@ -250,6 +358,32 @@ def keyPressed(app, event):
         app.leftWallCoords = vecs2Graph(app, app.leftWallVecs)
     #print(app.CUBE)
     #print(app.CUBEPOINTS)
+
+def makeCubeFloor(app, event):
+    th = np.array([0,0,10]) #thickness of the floor, arbitrary for now 
+    if app.cubeFloorVecs.shape[0] == 0: #rows
+        firstPoint = np.array([event.x, event.y])
+        e1 = graph2Vecs(app, [firstPoint])[0]
+        app.cubeFloorVecs = np.append(app.cubeFloorVecs, [e1], axis=0)
+        app.cubeFloorVecs = np.append(app.cubeFloorVecs, [e1+th], axis=0)
+        for i in range(4):
+            app.tempCubeFloorVecs = np.append(app.tempCubeFloorVecs, [e1], axis=0)
+            app.tempCubeFloorVecs = np.append(app.tempCubeFloorVecs, [e1+th], axis=0)
+        app.tempCubeFloorCoords = vecs2Graph(app, app.tempCubeFloorVecs) 
+    elif app.cubeFloorVecs.shape[0] == 2: #rows 
+        secondPoint = np.array([event.x, event.y])
+        e2 = graph2Vecs(app, [secondPoint])[0]
+        e1 = app.cubeFloorVecs[0]
+        e3 = np.array([e2[0], e1[1], 0])
+        e4 = np.array([e1[0], e2[1], 0])
+        for vec in [e2, e3, e4]:
+            app.cubeFloorVecs = np.append(app.cubeFloorVecs, [vec], axis=0)
+            app.cubeFloorVecs = np.append(app.cubeFloorVecs, [vec+th], axis=0)
+
+        app.cubeFloorCoords = vecs2Graph(app, app.cubeFloorVecs)
+        #print(app.cubeFloorVecs)
+
+        #app.cubeFloorVecs = np.append(app.cubeFloorVecs, )
 
 def makeFloor(app, event): 
     if app.floorCoords.shape[0] == 0: #rows
@@ -292,6 +426,18 @@ def makeFloor(app, event):
         #app.rightWallCoords = np.array([app.floorCoords[2], app.floorCoords[3]])
         #print(app.rightWallCoords)
 
+def floatCubeFloor(app, event):
+    th = np.array([0,0,10]) #arbitrary thickness
+    e2 = graph2Vecs(app, np.array([[event.x, event.y]]))[0]
+    e1 = app.cubeFloorVecs[0]
+    e3 = np.array([e2[0], e1[1], 0])
+    e4 = np.array([e1[0], e2[1], 0])
+    vecs2Add = [e2, e2+th, e3, e3+th, e4, e4+th]
+    for i in range(2, 8):
+        app.tempCubeFloorVecs[i] = vecs2Add[i-2]
+    #print(app.tempCubeFloorVecs)
+    app.tempCubeFloorCoords = vecs2Graph(app, app.tempCubeFloorVecs) 
+
 def floatFloor(app, event): 
     rightBotCoord = np.array([[event.x, event.y]])
 
@@ -322,6 +468,8 @@ def floatFloor(app, event):
     app.tempFloorCoords[3] = rightBotCoord 
 
 def mousePressed(app, event): 
+    if app.drawCubeFloor:
+        makeCubeFloor(app, event)
     if app.drawFloor: 
         makeFloor(app, event)
     if app.floorCoords.shape[0]==4 and app.wallHeight==None:
@@ -357,10 +505,13 @@ def mousePressed(app, event):
 
         app.rightWallVecs = graph2Vecs(app, app.rightWallCoords)
         app.leftWallVecs = graph2Vecs(app, app.leftWallCoords)
+        #store for later use 
 
         #app.wallHeight = h
 
 def mouseMoved(app, event): 
+    if app.drawCubeFloor and app.cubeFloorVecs.shape[0]==2:
+        floatCubeFloor(app, event)
     if app.drawFloor and app.floorCoords.shape[0]==1:
         floatFloor(app, event)
     if app.floorCoords.shape[0]==4 and app.wallHeight == False:
@@ -391,52 +542,6 @@ def mouseMoved(app, event):
         app.tempLeftWallCoords = np.array([lw0, lw1, lw2, lw3])
 
 def redrawAll(app, canvas):
-    #floor 
-    if app.drawFloor and app.floorCoords.shape[0]==1:
-        c0,d0 = app.tempFloorCoords[0]
-        c1,d1 = app.tempFloorCoords[1]
-        c2,d2 = app.tempFloorCoords[2]
-        c3,d3 = app.tempFloorCoords[3]
-        canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'yellow')
-    elif app.drawFloor and app.floorCoords.shape[0]==4: 
-        c0,d0 = app.floorCoords[0]
-        c1,d1 = app.floorCoords[1]
-        c2,d2 = app.floorCoords[2]
-        c3,d3 = app.floorCoords[3]
-        canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'yellow')
-        
-        #we drawin a wall now 
-    if (app.wallHeight!=None or app.wallHeight!=False) and app.rightWallCoords.shape[0]==4:
-        #print('wow')
-        #right
-        c0,d0 = app.rightWallCoords[0]
-        c1,d1 = app.rightWallCoords[1]
-        c2,d2 = app.rightWallCoords[2]
-        c3,d3 = app.rightWallCoords[3]
-        canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'green')
-
-        #left 
-        c0,d0 = app.leftWallCoords[0]
-        c1,d1 = app.leftWallCoords[1]
-        c2,d2 = app.leftWallCoords[2]
-        c3,d3 = app.leftWallCoords[3]
-        canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'blue')
-    if app.floorCoords.shape[0]==4 and app.tempRightWallCoords.shape[0]==4 and app.wallHeight == False:
-        #print('here')
-        #we never get here 
-        #right
-        c0,d0 = app.tempRightWallCoords[0]
-        c1,d1 = app.tempRightWallCoords[1]
-        c2,d2 = app.tempRightWallCoords[2]
-        c3,d3 = app.tempRightWallCoords[3]
-        canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'green')
-
-        #left 
-        c0,d0 = app.tempLeftWallCoords[0]
-        c1,d1 = app.tempLeftWallCoords[1]
-        c2,d2 = app.tempLeftWallCoords[2]
-        c3,d3 = app.tempLeftWallCoords[3]
-        canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'blue')
 
     ox, oy = app.origin
 
@@ -453,32 +558,123 @@ def redrawAll(app, canvas):
     yAxisy = g2y(app, (app.height)*(math.sin(app.yAxisAngle)))
     canvas.create_line(ox, oy, yAxisx, yAxisy)
 
-    for point in app.CUBEPOINTS:
-        canvas.create_oval(point[0]-3, point[1]-3, point[0]+3, point[1]+3, fill='blue')
-    
-    CUBE = app.CUBE
-    for i in range(app.CUBEPOINTS.shape[0]): #rows
-        p1 = app.CUBEPOINTS[i]
-        v1 = app.CUBE[i]
-        for j in range(app.CUBEPOINTS.shape[0]): #rows
-            p2 = app.CUBEPOINTS[j]
-            v2 = app.CUBE[j]
-            diffVec = v1-v2 
-            if math.sqrt(diffVec[0]**2 + diffVec[1]**2 + diffVec[2]**2) <= 50: 
+    #get a sample cube floor 
+    for i in range(app.sampleCubeFloorCoords.shape[0]): #rows
+        p1 = app.sampleCubeFloorCoords[i]
+        #v1 = app.cubeFloorVecs[i]
+        for j in range(app.sampleCubeFloorCoords.shape[0]): #rows
+            p2 = app.sampleCubeFloorCoords[j]
+            #v2 = app.CUBE[j]
+            #diffVec = v1-v2 
+            #if math.sqrt(diffVec[0]**2 + diffVec[1]**2 + diffVec[2]**2) <= 60: 
+            canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill = 'green')
+
+    #and a sample cube on top of the floor
+    for i in range(app.sampleCube.shape[0]): #rows
+        p1 = app.sampleCubeCoords[i]
+        #v1 = app.cubeFloorVecs[i]
+        for j in range(app.sampleCube.shape[0]): #rows
+            p2 = app.sampleCubeCoords[j]
+            #v2 = app.CUBE[j]
+            #diffVec = v1-v2 
+            #if math.sqrt(diffVec[0]**2 + diffVec[1]**2 + diffVec[2]**2) <= 60: 
+            canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill = 'green')
+
+    #cube floor (moving)
+    if app.drawCubeFloor and app.cubeFloorVecs.shape[0]==2:
+        for i in range(app.tempCubeFloorCoords.shape[0]): #rows
+            p1 = app.tempCubeFloorCoords[i]
+            #v1 = app.cubeFloorVecs[i]
+            for j in range(app.tempCubeFloorCoords.shape[0]): #rows
+                p2 = app.tempCubeFloorCoords[j]
+                #v2 = app.CUBE[j]
+                #diffVec = v1-v2 
+                #if math.sqrt(diffVec[0]**2 + diffVec[1]**2 + diffVec[2]**2) <= 60: 
                 canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill = 'blue')
 
-    #rotating axes 
-    xAxisCoords = vecs2Graph(app, [app.xAxisVec])
-    x,y = xAxisCoords[0][0], xAxisCoords[0][1]
-    #print(x,y)
-    canvas.create_line(ox,oy,x,y, fill='red')
+    #cube floor (static)
+    if app.drawCubeFloor and app.cubeFloorVecs.shape[0]==8:
+        for i in range(app.cubeFloorCoords.shape[0]): #rows
+            p1 = app.cubeFloorCoords[i]
+            #v1 = app.cubeFloorVecs[i]
+            for j in range(app.cubeFloorCoords.shape[0]): #rows
+                p2 = app.cubeFloorCoords[j]
+                #v2 = app.CUBE[j]
+                #diffVec = v1-v2 
+                #if math.sqrt(diffVec[0]**2 + diffVec[1]**2 + diffVec[2]**2) <= 60: 
+                canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill = 'blue')
 
-    yAxisCoords = vecs2Graph(app, [app.yAxisVec])
-    x,y = yAxisCoords[0][0], yAxisCoords[0][1]
-    #print(x,y)
-    canvas.create_line(ox,oy,x,y, fill='orange')
+    #floor 
+    if app.drawFloor and app.floorCoords.shape[0]==1:
+        c0,d0 = app.tempFloorCoords[0]
+        c1,d1 = app.tempFloorCoords[1]
+        c2,d2 = app.tempFloorCoords[2]
+        c3,d3 = app.tempFloorCoords[3]
+        canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'yellow')
+    elif app.drawFloor and app.floorCoords.shape[0]==4: 
+        c0,d0 = app.floorCoords[0]
+        c1,d1 = app.floorCoords[1]
+        c2,d2 = app.floorCoords[2]
+        c3,d3 = app.floorCoords[3]
+        canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'yellow')
+        
+    #we drawin a wall now 
+    if (app.wallHeight!=None or app.wallHeight!=False) and app.rightWallCoords.shape[0]==4:
+        #right
+        c0,d0 = app.rightWallCoords[0]
+        c1,d1 = app.rightWallCoords[1]
+        c2,d2 = app.rightWallCoords[2]
+        c3,d3 = app.rightWallCoords[3]
+        canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'green')
 
+        #left 
+        c0,d0 = app.leftWallCoords[0]
+        c1,d1 = app.leftWallCoords[1]
+        c2,d2 = app.leftWallCoords[2]
+        c3,d3 = app.leftWallCoords[3]
+        canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'blue')
 
+    if app.floorCoords.shape[0]==4 and app.tempRightWallCoords.shape[0]==4 and app.wallHeight == False:
+        #right
+        c0,d0 = app.tempRightWallCoords[0]
+        c1,d1 = app.tempRightWallCoords[1]
+        c2,d2 = app.tempRightWallCoords[2]
+        c3,d3 = app.tempRightWallCoords[3]
+        canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'green')
+
+        #left 
+        c0,d0 = app.tempLeftWallCoords[0]
+        c1,d1 = app.tempLeftWallCoords[1]
+        c2,d2 = app.tempLeftWallCoords[2]
+        c3,d3 = app.tempLeftWallCoords[3]
+        canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'blue')
+
+    #unit cube, for rotation demonstration
+    if app.showUnitCube:
+        for point in app.CUBEPOINTS:
+            canvas.create_oval(point[0]-3, point[1]-3, point[0]+3, point[1]+3, fill='blue')
+
+        CUBE = app.CUBE
+        for i in range(app.CUBEPOINTS.shape[0]): #rows
+            p1 = app.CUBEPOINTS[i]
+            v1 = app.CUBE[i]
+            for j in range(app.CUBEPOINTS.shape[0]): #rows
+                p2 = app.CUBEPOINTS[j]
+                v2 = app.CUBE[j]
+                diffVec = v1-v2 
+                if math.sqrt(diffVec[0]**2 + diffVec[1]**2 + diffVec[2]**2) <= 60: 
+                    canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill = 'blue')
+
+        #rotating axes 
+        xAxisCoords = vecs2Graph(app, [app.xAxisVec])
+        x,y = xAxisCoords[0][0], xAxisCoords[0][1]
+        #print(x,y)
+        canvas.create_line(ox,oy,x,y, fill='red')
+
+        yAxisCoords = vecs2Graph(app, [app.yAxisVec])
+        x,y = yAxisCoords[0][0], yAxisCoords[0][1]
+        #print(x,y)
+        canvas.create_line(ox,oy,x,y, fill='orange')
 
 runApp(width=600, height=600)
 
