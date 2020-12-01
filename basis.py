@@ -192,7 +192,7 @@ def appStarted(app):
                                 [100, 120,  60],
                                 [150, 120,  60]])
     app.sampleCubeCoords = vecs2Graph(app, app.sampleCube)
-
+    app.view = False
 
 def keyPressed(app, event):
 
@@ -344,6 +344,10 @@ def keyPressed(app, event):
         for row in app.CUBE:
             row[1]+=10
         #move the cube right (y)
+
+    elif event.key == 'v':
+        #change view
+        app.view = not app.view
 
    # print(app.CUBE)
     #update cubepoints 
@@ -542,139 +546,144 @@ def mouseMoved(app, event):
         app.tempLeftWallCoords = np.array([lw0, lw1, lw2, lw3])
 
 def redrawAll(app, canvas):
+    if not app.view:
 
-    ox, oy = app.origin
+        ox, oy = app.origin
 
-    #z axis
-    canvas.create_line(ox,oy, ox, 0)
+        #z axis
+        canvas.create_line(ox,oy, ox, 0)
 
-    #x axis
-    xAxisx = g2x(app, app.width*(math.cos(app.xAxisAngle)))
-    xAxisy = g2y(app, app.height*(math.sin(app.xAxisAngle)))
-    canvas.create_line(ox, oy, xAxisx, xAxisy)
+        #x axis
+        xAxisx = g2x(app, app.width*(math.cos(app.xAxisAngle)))
+        xAxisy = g2y(app, app.height*(math.sin(app.xAxisAngle)))
+        canvas.create_line(ox, oy, xAxisx, xAxisy)
 
-    #y axis
-    yAxisx = g2x(app, (app.width)*(math.cos(app.yAxisAngle)))
-    yAxisy = g2y(app, (app.height)*(math.sin(app.yAxisAngle)))
-    canvas.create_line(ox, oy, yAxisx, yAxisy)
+        #y axis
+        yAxisx = g2x(app, (app.width)*(math.cos(app.yAxisAngle)))
+        yAxisy = g2y(app, (app.height)*(math.sin(app.yAxisAngle)))
+        canvas.create_line(ox, oy, yAxisx, yAxisy)
 
-    #get a sample cube floor 
-    for i in range(app.sampleCubeFloorCoords.shape[0]): #rows
-        p1 = app.sampleCubeFloorCoords[i]
-        #v1 = app.cubeFloorVecs[i]
-        for j in range(app.sampleCubeFloorCoords.shape[0]): #rows
-            p2 = app.sampleCubeFloorCoords[j]
-            #v2 = app.CUBE[j]
-            #diffVec = v1-v2 
-            #if math.sqrt(diffVec[0]**2 + diffVec[1]**2 + diffVec[2]**2) <= 60: 
-            canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill = 'green')
-
-    #and a sample cube on top of the floor
-    for i in range(app.sampleCube.shape[0]): #rows
-        p1 = app.sampleCubeCoords[i]
-        #v1 = app.cubeFloorVecs[i]
-        for j in range(app.sampleCube.shape[0]): #rows
-            p2 = app.sampleCubeCoords[j]
-            #v2 = app.CUBE[j]
-            #diffVec = v1-v2 
-            #if math.sqrt(diffVec[0]**2 + diffVec[1]**2 + diffVec[2]**2) <= 60: 
-            canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill = 'green')
-
-    #cube floor (moving)
-    if app.drawCubeFloor and app.cubeFloorVecs.shape[0]==2:
-        for i in range(app.tempCubeFloorCoords.shape[0]): #rows
-            p1 = app.tempCubeFloorCoords[i]
+        #get a sample cube floor 
+        for i in range(app.sampleCubeFloorCoords.shape[0]): #rows
+            p1 = app.sampleCubeFloorCoords[i]
             #v1 = app.cubeFloorVecs[i]
-            for j in range(app.tempCubeFloorCoords.shape[0]): #rows
-                p2 = app.tempCubeFloorCoords[j]
+            for j in range(app.sampleCubeFloorCoords.shape[0]): #rows
+                p2 = app.sampleCubeFloorCoords[j]
+                #v2 = app.CUBE[j]
+                #diffVec = v1-v2 
+                #if math.sqrt(diffVec[0]**2 + diffVec[1]**2 + diffVec[2]**2) <= 60: 
+                canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill = 'green')
+
+        #and a sample cube on top of the floor
+        for i in range(app.sampleCube.shape[0]): #rows
+            p1 = app.sampleCubeCoords[i]
+            #v1 = app.cubeFloorVecs[i]
+            for j in range(app.sampleCube.shape[0]): #rows
+                p2 = app.sampleCubeCoords[j]
                 #v2 = app.CUBE[j]
                 #diffVec = v1-v2 
                 #if math.sqrt(diffVec[0]**2 + diffVec[1]**2 + diffVec[2]**2) <= 60: 
                 canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill = 'blue')
 
-    #cube floor (static)
-    if app.drawCubeFloor and app.cubeFloorVecs.shape[0]==8:
-        for i in range(app.cubeFloorCoords.shape[0]): #rows
-            p1 = app.cubeFloorCoords[i]
-            #v1 = app.cubeFloorVecs[i]
-            for j in range(app.cubeFloorCoords.shape[0]): #rows
-                p2 = app.cubeFloorCoords[j]
-                #v2 = app.CUBE[j]
-                #diffVec = v1-v2 
-                #if math.sqrt(diffVec[0]**2 + diffVec[1]**2 + diffVec[2]**2) <= 60: 
-                canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill = 'blue')
-
-    #floor 
-    if app.drawFloor and app.floorCoords.shape[0]==1:
-        c0,d0 = app.tempFloorCoords[0]
-        c1,d1 = app.tempFloorCoords[1]
-        c2,d2 = app.tempFloorCoords[2]
-        c3,d3 = app.tempFloorCoords[3]
-        canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'yellow')
-    elif app.drawFloor and app.floorCoords.shape[0]==4: 
-        c0,d0 = app.floorCoords[0]
-        c1,d1 = app.floorCoords[1]
-        c2,d2 = app.floorCoords[2]
-        c3,d3 = app.floorCoords[3]
-        canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'yellow')
-        
-    #we drawin a wall now 
-    if (app.wallHeight!=None or app.wallHeight!=False) and app.rightWallCoords.shape[0]==4:
-        #right
-        c0,d0 = app.rightWallCoords[0]
-        c1,d1 = app.rightWallCoords[1]
-        c2,d2 = app.rightWallCoords[2]
-        c3,d3 = app.rightWallCoords[3]
-        canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'green')
-
-        #left 
-        c0,d0 = app.leftWallCoords[0]
-        c1,d1 = app.leftWallCoords[1]
-        c2,d2 = app.leftWallCoords[2]
-        c3,d3 = app.leftWallCoords[3]
-        canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'blue')
-
-    if app.floorCoords.shape[0]==4 and app.tempRightWallCoords.shape[0]==4 and app.wallHeight == False:
-        #right
-        c0,d0 = app.tempRightWallCoords[0]
-        c1,d1 = app.tempRightWallCoords[1]
-        c2,d2 = app.tempRightWallCoords[2]
-        c3,d3 = app.tempRightWallCoords[3]
-        canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'green')
-
-        #left 
-        c0,d0 = app.tempLeftWallCoords[0]
-        c1,d1 = app.tempLeftWallCoords[1]
-        c2,d2 = app.tempLeftWallCoords[2]
-        c3,d3 = app.tempLeftWallCoords[3]
-        canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'blue')
-
-    #unit cube, for rotation demonstration
-    if app.showUnitCube:
-        for point in app.CUBEPOINTS:
-            canvas.create_oval(point[0]-3, point[1]-3, point[0]+3, point[1]+3, fill='blue')
-
-        CUBE = app.CUBE
-        for i in range(app.CUBEPOINTS.shape[0]): #rows
-            p1 = app.CUBEPOINTS[i]
-            v1 = app.CUBE[i]
-            for j in range(app.CUBEPOINTS.shape[0]): #rows
-                p2 = app.CUBEPOINTS[j]
-                v2 = app.CUBE[j]
-                diffVec = v1-v2 
-                if math.sqrt(diffVec[0]**2 + diffVec[1]**2 + diffVec[2]**2) <= 60: 
+        #cube floor (moving)
+        if app.drawCubeFloor and app.cubeFloorVecs.shape[0]==2:
+            for i in range(app.tempCubeFloorCoords.shape[0]): #rows
+                p1 = app.tempCubeFloorCoords[i]
+                #v1 = app.cubeFloorVecs[i]
+                for j in range(app.tempCubeFloorCoords.shape[0]): #rows
+                    p2 = app.tempCubeFloorCoords[j]
+                    #v2 = app.CUBE[j]
+                    #diffVec = v1-v2 
+                    #if math.sqrt(diffVec[0]**2 + diffVec[1]**2 + diffVec[2]**2) <= 60: 
                     canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill = 'blue')
 
-        #rotating axes 
-        xAxisCoords = vecs2Graph(app, [app.xAxisVec])
-        x,y = xAxisCoords[0][0], xAxisCoords[0][1]
-        #print(x,y)
-        canvas.create_line(ox,oy,x,y, fill='red')
+        #cube floor (static)
+        if app.drawCubeFloor and app.cubeFloorVecs.shape[0]==8:
+            for i in range(app.cubeFloorCoords.shape[0]): #rows
+                p1 = app.cubeFloorCoords[i]
+                #v1 = app.cubeFloorVecs[i]
+                for j in range(app.cubeFloorCoords.shape[0]): #rows
+                    p2 = app.cubeFloorCoords[j]
+                    #v2 = app.CUBE[j]
+                    #diffVec = v1-v2 
+                    #if math.sqrt(diffVec[0]**2 + diffVec[1]**2 + diffVec[2]**2) <= 60: 
+                    canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill = 'blue')
 
-        yAxisCoords = vecs2Graph(app, [app.yAxisVec])
-        x,y = yAxisCoords[0][0], yAxisCoords[0][1]
-        #print(x,y)
-        canvas.create_line(ox,oy,x,y, fill='orange')
+        #floor 
+        if app.drawFloor and app.floorCoords.shape[0]==1:
+            c0,d0 = app.tempFloorCoords[0]
+            c1,d1 = app.tempFloorCoords[1]
+            c2,d2 = app.tempFloorCoords[2]
+            c3,d3 = app.tempFloorCoords[3]
+            canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'yellow')
+        elif app.drawFloor and app.floorCoords.shape[0]==4: 
+            c0,d0 = app.floorCoords[0]
+            c1,d1 = app.floorCoords[1]
+            c2,d2 = app.floorCoords[2]
+            c3,d3 = app.floorCoords[3]
+            canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'yellow')
+            
+        #we drawin a wall now 
+        if (app.wallHeight!=None or app.wallHeight!=False) and app.rightWallCoords.shape[0]==4:
+            #right
+            c0,d0 = app.rightWallCoords[0]
+            c1,d1 = app.rightWallCoords[1]
+            c2,d2 = app.rightWallCoords[2]
+            c3,d3 = app.rightWallCoords[3]
+            canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'green')
+
+            #left 
+            c0,d0 = app.leftWallCoords[0]
+            c1,d1 = app.leftWallCoords[1]
+            c2,d2 = app.leftWallCoords[2]
+            c3,d3 = app.leftWallCoords[3]
+            canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'blue')
+
+        if app.floorCoords.shape[0]==4 and app.tempRightWallCoords.shape[0]==4 and app.wallHeight == False:
+            #right
+            c0,d0 = app.tempRightWallCoords[0]
+            c1,d1 = app.tempRightWallCoords[1]
+            c2,d2 = app.tempRightWallCoords[2]
+            c3,d3 = app.tempRightWallCoords[3]
+            canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'green')
+
+            #left 
+            c0,d0 = app.tempLeftWallCoords[0]
+            c1,d1 = app.tempLeftWallCoords[1]
+            c2,d2 = app.tempLeftWallCoords[2]
+            c3,d3 = app.tempLeftWallCoords[3]
+            canvas.create_polygon(c0,d0,c1,d1,c3,d3,c2,d2, fill = 'blue')
+
+        #unit cube, for rotation demonstration
+        if app.showUnitCube:
+            for point in app.CUBEPOINTS:
+                canvas.create_oval(point[0]-3, point[1]-3, point[0]+3, point[1]+3, fill='blue')
+
+            CUBE = app.CUBE
+            for i in range(app.CUBEPOINTS.shape[0]): #rows
+                p1 = app.CUBEPOINTS[i]
+                v1 = app.CUBE[i]
+                for j in range(app.CUBEPOINTS.shape[0]): #rows
+                    p2 = app.CUBEPOINTS[j]
+                    v2 = app.CUBE[j]
+                    diffVec = v1-v2 
+                    if math.sqrt(diffVec[0]**2 + diffVec[1]**2 + diffVec[2]**2) <= 60: 
+                        canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill = 'blue')
+
+            #rotating axes 
+            xAxisCoords = vecs2Graph(app, [app.xAxisVec])
+            x,y = xAxisCoords[0][0], xAxisCoords[0][1]
+            #print(x,y)
+            canvas.create_line(ox,oy,x,y, fill='red')
+
+            yAxisCoords = vecs2Graph(app, [app.yAxisVec])
+            x,y = yAxisCoords[0][0], yAxisCoords[0][1]
+            #print(x,y)
+            canvas.create_line(ox,oy,x,y, fill='orange')
+    else:
+        #here's our view window
+        #start by facing the X Axis 
+        pass
 
 runApp(width=600, height=600)
 
