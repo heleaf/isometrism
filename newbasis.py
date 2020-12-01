@@ -44,6 +44,11 @@ def appStarted(app):
     app.tempLeftCubeWallCoords = np.empty((0,2))
     app.tempRightCubeWallCoords = np.empty((0,2))
 
+    app.fv = Cube(200,200,10, (50,50,0))
+    app.rw = Cube(10,200,200, (40,50,0))
+    app.lw = Cube(200,10,200, (50,40,0))
+    app.test = [app.fv, app.rw, app.lw]
+
     app.sampleCubeFloorVecs = np.array([[287.7097569,   39.75633592,  0.        ],
                                     [287.7097569,   39.75633592,  10.        ],
                                     [ 43.73894914, 301.26997008,   0.        ],
@@ -52,7 +57,7 @@ def appStarted(app):
                                     [ 43.73894914, 39.75633592,  10.        ],
                                     [287.7097569,  301.26997008,   0.        ],
                                     [287.7097569,  301.26997008, 10.        ]])
-    #print(app.sampleCubeFloor.shape)
+    
     app.sampleCubeFloorCoords = vecs2Graph(app, app.sampleCubeFloorVecs)
 
     app.sampleCubeRWVecs = np.array([[ 43.73894914, 301.26997008,   0.        ],
@@ -90,6 +95,9 @@ def appStarted(app):
     app.classCube = Cube(50,100,150, (100,100,0))
     app.classCube2 = Cube(50,100,150, (0,100,0))
     app.misc = [app.classCube, app.classCube2]
+    app.tempMisc = []
+
+    app.makeCubes = False
 
 def rotateCube(app, cube, angle, rotAxis=(0,0,1)):
     newCube = np.empty((0,3))
@@ -102,7 +110,11 @@ def rotateCube(app, cube, angle, rotAxis=(0,0,1)):
     return newCube
 
 def keyPressed(app, event):
-    if event.key == '2':
+
+    if event.key == '1':
+        app.makeCubes = not app.makeCubes 
+        app.misc = [app.classCube, app.classCube2] 
+    elif event.key == '2':
         #try shifting origin? 
         #app.origin = (app.origin[0]+20, app.origin[1]+20)
         #works 
@@ -348,10 +360,47 @@ def mousePressed(app, event):
         makeCubeFloor(app, event)
     elif app.cubeFloorCoords.shape[0]==8 and app.cubeWallHeight==None:
         makeCubeWalls(app, event)
+
+    
+    #app.classCube.isCollide(app.classCube2)
+    if app.makeCubes:
+        origin = graph2Vecs(app, [[event.x, event.y]])[0]
+        app.newCube = Cube(30, 30, 30, origin)
+        app.tempMisc.append(app.newCube)
+    #   cube.rotate(20)
         #app.cubeWallHeight = False
         #print(app.cubeFloorCoords)
     #elif app.cubeWallHeight == False:
         #makeCubeWalls(app, event)
+
+def mouseDragged(app, event):
+    if app.makeCubes:
+        origin = graph2Vecs(app, [[event.x, event.y]])[0]
+        app.newCube = Cube(30, 30, 30, origin)
+        if app.tempMisc != []:
+            app.tempMisc[-1] = app.newCube
+        #print(app.newCube.origin)
+
+def mouseReleased(app, event):
+    if app.makeCubes: 
+        ox,oy,oz = app.newCube.origin
+
+        if (app.newCube.origin[0] + app.newCube.length > app.fv.origin[0] + app.fv.length):
+            ox = app.fv.origin[0] + app.fv.length - app.newCube.length 
+        elif (app.newCube.origin[0]<app.fv.origin[0]):
+            ox = app.fv.origin[0]
+
+        if (app.newCube.origin[1] + app.newCube.width > app.fv.origin[1] + app.fv.width
+        ): 
+            oy = app.fv.origin[1] + app.fv.width - app.newCube.width
+        elif (app.newCube.origin[1]<app.fv.origin[1]):
+            oy = app.fv.origin[1]
+
+        oz = app.fv.height
+        app.newCube = Cube(30,30,30, (ox,oy,oz))
+
+        app.misc.append(app.newCube)
+        app.tempMisc.pop()
 
 def mouseMoved(app, event): 
     if app.drawCubeFloor and app.cubeFloorVecs.shape[0]==2:
@@ -359,6 +408,11 @@ def mouseMoved(app, event):
     elif app.cubeFloorVecs.shape[0]==8 and app.cubeWallHeight==None:
         print('here!')
         floatCubeWalls(app, event)
+    '''
+    elif app.makeCubes:
+        origin = graph2Vecs(app, [[event.x, event.y]])[0]
+        app.newCube = Cube(30, 30, 30, origin) 
+         '''
 
 def drawCube(app, canvas, cubeCoords, color='black'):
     for i in range(cubeCoords.shape[0]):
@@ -379,10 +433,16 @@ def drawSamples(app, canvas):
     drawCube(app, canvas, app.sampleCubeCoords, 'blue')
 
 def redrawAll(app, canvas):
+    for c in app.test:
+        c = vecs2Graph(app, c.vecs)
+        drawCube(app, canvas, c, 'purple')
 
-    for cube in app.misc:
+    for cube in app.misc[2:]:
         c = vecs2Graph(app, cube.vecs)
         drawCube(app, canvas, c, 'orange')
+    for cube in app.tempMisc:
+        c = vecs2Graph(app, cube.vecs)
+        drawCube(app, canvas, c, 'red')
 
     if not app.view:
         ox, oy = app.origin
