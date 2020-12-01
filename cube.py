@@ -4,13 +4,15 @@ from threedimfunctions import *
 class Cube(object):
 
     def __init__(self, length, width, height, origin=(0,0,0)):
-        self.l = length
-        self.w = width
-        self.h = height 
+        self.length = length
+        self.width = width
+        self.height = height 
 
-        l = self.l
-        w = self.w
-        h = self.h
+        self.origin = origin
+
+        l = self.length
+        w = self.width
+        h = self.height
 
         self.vecs = np.array([[0,0,0],
                             [l,0,0],
@@ -23,7 +25,7 @@ class Cube(object):
         
         #if origin!=None: 
         for i in range(self.vecs.shape[0]):
-            self.vecs[i] = self.vecs[i]+np.array(origin)
+            self.vecs[i] = self.vecs[i]+np.array(self.origin)
 
     def rotate(self, angle, axis=(0,0,1)):
         
@@ -32,5 +34,6 @@ class Cube(object):
 
     def isCollide(self, other):
         if isinstance(other, Cube):
+            
             pass
         return None

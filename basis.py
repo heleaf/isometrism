@@ -2,6 +2,7 @@ import math
 import numpy as np
 from cmu_112_graphics import *
 from threedimfunctions import *
+from oldfloor import *
 from cube import *
 
 def appStarted(app):
@@ -46,7 +47,13 @@ def appStarted(app):
     app.drawCubeFloor = False
     app.cubeFloorVecs = np.empty((0,3))
     app.tempCubeFloorVecs = np.empty((0,3))
+    app.cubeFloorCoords = np.empty((0,2))
 
+    app.cubeWallHeight = None
+    app.leftCubeWallCoords = np.empty((0,2))
+    app.rightCubeWallCoords = np.empty((0,2))
+    app.tempLeftCubeWallCoords = np.empty((0,2))
+    app.tempRightCubeWallCoords = np.empty((0,2))
 
     app.sampleCubeFloor = np.array([[300.47989017,  26.98620265,   0.        ],
                             [300.47989017,  26.98620265,  10.        ],
@@ -111,33 +118,11 @@ def keyPressed(app, event):
     elif event.key == '3':
         #try rotating the room 
         if app.drawFloor: 
-            newFloorVecs = np.empty((0,3))
-            for vec in app.floorVecs:
-                if vec[0]==vec[1]==vec[2]==0:
-                    rotatedVec = vec
-                else:
-                    rotatedVec = rotateVec(app, vec, 10, [0,0,1])
-                newFloorVecs = np.append(newFloorVecs, [rotatedVec], axis = 0)
-            app.floorVecs = newFloorVecs 
+            app.floorVecs = rotateCube(app, app.floorVecs, 10)
 
         if app.wallHeight!=None and app.wallHeight!=False:
-            newRWVecs = np.empty((0,3))
-            for vec in app.rightWallVecs:
-                if vec[0]==vec[1]==vec[2]==0:
-                    rotatedVec = vec
-                else:
-                    rotatedVec = rotateVec(app, vec, 10, [0,0,1])
-                newRWVecs= np.append(newRWVecs, [rotatedVec], axis = 0)
-            app.rightWallVecs = newRWVecs 
-
-            newLWVecs = np.empty((0,3))
-            for vec in app.leftWallVecs:
-                if vec[0]==vec[1]==vec[2]==0:
-                    rotatedVec = vec
-                else:
-                    rotatedVec = rotateVec(app, vec, 10, [0,0,1])
-                newLWVecs = np.append(newLWVecs, [rotatedVec], axis = 0)
-            app.leftWallVecs = newLWVecs 
+            app.rightWallVecs = rotateCube(app, app.rightWallVecs, 10)
+            app.leftWallVecs = rotateCube(app, app.leftWallVecs, 10)
 
         #this doesn't work that well. we may need to make the floor out of 'cubes' 
     
@@ -145,6 +130,12 @@ def keyPressed(app, event):
         app.drawCubeFloor = not app.drawCubeFloor
         app.cubeFloorVecs = np.empty((0,3))
         app.tempCubeFloorVecs = np.empty((0,3))
+
+        app.cubeWallHeight = None
+        app.leftCubeWallCoords = np.empty((0,2))
+        app.rightCubeWallCoords = np.empty((0,2))
+        app.tempLeftCubeWallCoords = np.empty((0,2))
+        app.tempRightCubeWallCoords = np.empty((0,2))
 
     elif event.key == 'h':
         #toggle unit cube
@@ -233,53 +224,25 @@ def makeCubeFloor(app, event, thickness=10):
         secondPoint = np.array([event.x, event.y])
         e2 = graph2Vecs(app, [secondPoint])[0]
         e1 = app.cubeFloorVecs[0]
+
         e3 = np.array([e2[0], e1[1], 0])
         e4 = np.array([e1[0], e2[1], 0])
+        #for v in [e1,e2,e3,e4]:
+            #print(f'basis v')
+            #thickness is height 
+            #abs(e1[0]-e2[0]) is length
+            #abs(e1[1]-e2[1]) is width
         for vec in [e2, e3, e4]:
             app.cubeFloorVecs = np.append(app.cubeFloorVecs, [vec], axis=0)
             app.cubeFloorVecs = np.append(app.cubeFloorVecs, [vec+th], axis=0)
         app.cubeFloorCoords = vecs2Graph(app, app.cubeFloorVecs)
-
-def makeFloor(app, event): 
-    if app.floorCoords.shape[0] == 0: #rows
-        leftTopCoord = np.array([[event.x, event.y]])
-        app.floorCoords = np.append(app.floorCoords, leftTopCoord, axis=0)
-        for i in range(4):
-            app.tempFloorCoords = np.append(app.tempFloorCoords, 
-                                            leftTopCoord, axis=0)
-    elif app.floorCoords.shape[0] == 1: #rows
-        rightBotCoord = np.array([[event.x, event.y]])
-
-        tempCoords = np.append(app.floorCoords, rightBotCoord, axis=0)
-        tempVecs = graph2Vecs(app, tempCoords)
-
-        leftTopVec, rightBotVec = tempVecs[0], tempVecs[1]
-
-        #finding [x,y,z] of rightTopCoord 
-        xRT = rightBotVec[0]
-        yRT = leftTopVec[1]
-        zRT = 0 
-        rightTopVec = np.array([[xRT,yRT,zRT]])
-
-        #finding [x,y,z] of leftBotCoord 
-        xLB = leftTopVec[0] # rightBotVec[0]
-        yLB = rightBotVec[1] #+ leftTopVec[1]
-        zLB = 0
-        leftBotVec = np.array([[xLB, yLB, zLB]])
-
-        tempVecs2 = np.append(rightTopVec, leftBotVec, axis=0)
-        tempCoords2 = vecs2Graph(app, tempVecs2)
-
-        rightTopCoord, leftBotCoord = [tempCoords2[0]], [tempCoords2[1]]
         
-        app.floorCoords = np.append(app.floorCoords,leftBotCoord, axis=0)
-        app.floorCoords = np.append(app.floorCoords,rightTopCoord, axis=0)
-        app.floorCoords = np.append(app.floorCoords,rightBotCoord, axis=0) 
+        l = abs(e1[0]-e2[0])
+        w = abs(e1[1]-e2[1])
+        h = thickness 
+        app.altCubeFloor = Cube(l,w,h,e3)
 
-        app.floorVecs = graph2Vecs(app, app.floorCoords) #store for rotation adjustment later
-        #print(f'floor: \n{app.floorCoords}')
-        #app.rightWallCoords = np.array([app.floorCoords[2], app.floorCoords[3]])
-        #print(app.rightWallCoords)
+        print('madeit')
 
 def floatCubeFloor(app, event):
     th = np.array([0,0,10]) #arbitrary thickness
@@ -293,42 +256,43 @@ def floatCubeFloor(app, event):
     #print(app.tempCubeFloorVecs)
     app.tempCubeFloorCoords = vecs2Graph(app, app.tempCubeFloorVecs) 
 
-def floatFloor(app, event): 
-    rightBotCoord = np.array([[event.x, event.y]])
+def makeCubeWalls(app, event):
+    #app.cubeWallHeight = None
+    #app.leftCubeWallCoords = np.empty((0,2))
+    #app.rightCubeWallCoords = np.empty((0,2))
+    #app.tempLeftCubeWallCoords = np.empty((0,2))
+    #app.tempRightCubeWallCoords = np.empty((0,2))
 
-    tempCoords = np.append(app.floorCoords, rightBotCoord, axis=0)
-    tempVecs = graph2Vecs(app, tempCoords)
+    #floorcoords = vecs2Graph(app, app.cubeFloorCoords)
 
-    leftTopVec, rightBotVec = tempVecs[0], tempVecs[1]
+    app.cubeWallHeight = app.cubeFloorCoords[0][-1]-event.y
+    print(app.cubeWallHeight)
 
-    #finding [x,y,z] of rightTopCoord 
-    xRT = rightBotVec[0]
-    yRT = leftTopVec[1]
-    zRT = 0 
-    rightTopVec = np.array([[xRT,yRT,zRT]])
+    rl = app.altCubeFloor.height
+    rw = app.altCubeFloor.width
+    rh = app.cubeWallHeight
+    x,y,z = app.altCubeFloor.origin 
 
-    #finding [x,y,z] of leftBotCoord 
-    xLB = leftTopVec[0] # rightBotVec[0]
-    yLB = rightBotVec[1] #+ leftTopVec[1]
-    zLB = 0
-    leftBotVec = np.array([[xLB, yLB, zLB]])
+    #temp = (x-rl, y-rl, z)
 
-    tempVecs2 = np.append(rightTopVec, leftBotVec, axis=0)
-    tempCoords2 = vecs2Graph(app, tempVecs2)
-
-    rightTopCoord, leftBotCoord = tempCoords2[0], tempCoords2[1]
-
-    app.tempFloorCoords[1] = leftBotCoord
-    app.tempFloorCoords[2] = rightTopCoord
-    app.tempFloorCoords[3] = rightBotCoord 
+    app.rightCubeWall = Cube(rl, rw, rh, (x-rl,y,0))
+    app.rightCubeWallCoords = vecs2Graph(app, app.rightCubeWall.vecs)
+    #app.cubeWallHeight = app.cubeFloorCoords
 
 def mousePressed(app, event): 
     if app.drawCubeFloor:
         makeCubeFloor(app, event)
-    if app.drawFloor: 
+    if app.cubeFloorCoords.shape[0]==8 and app.cubeWallHeight==None:
+        app.cubeWallHeight = False
+        return
+        #print(app.cubeFloorCoords)
+    if app.cubeWallHeight == False:
+        makeCubeWalls(app, event)
+    if app.drawFloor and app.floorCoords.shape[0]!=4: 
         makeFloor(app, event)
     if app.floorCoords.shape[0]==4 and app.wallHeight==None:
         app.wallHeight = False
+        return
     if app.wallHeight==False:
         print(app.wallHeight)
         #make walls
@@ -357,11 +321,9 @@ def mousePressed(app, event):
         app.leftWallCoords = np.array([lw0, lw1, lw2, lw3])
 
         #app.drawWalls = False
-
         app.rightWallVecs = graph2Vecs(app, app.rightWallCoords)
         app.leftWallVecs = graph2Vecs(app, app.leftWallCoords)
         #store for later use 
-
         #app.wallHeight = h
 
 def mouseMoved(app, event): 
@@ -406,6 +368,9 @@ def drawCube(app, canvas, cubeCoords, color='black'):
 def redrawAll(app, canvas):
     c = vecs2Graph(app, app.classCube.vecs)
     drawCube(app, canvas, c, 'orange')
+
+    if app.rightCubeWallCoords.shape[0]==8:
+        drawCube(app, canvas, app.rightCubeWallCoords, 'red')
 
     if not app.view:
         ox, oy = app.origin
