@@ -1,132 +1,8 @@
 import math
 import numpy as np
 from cmu_112_graphics import *
-
-#https://www.math.tamu.edu/~mpilant/math311/ComputerGraphics.pdf 
-
-#origin = (app.width/2, app.height/2)
-# (x,y)
-
-#in terms of unit circle...
-#z3: subtract height to "increase" , at 90
-    # to add a: add (acos90, asin90)
-    # aka add (0, a) 
-#y3: 120 degrees clockwise: 90-120 = -30 = -30+360 = 330
-    # to add a to y: 
-    # add acos(120) to x
-    # add (acos120, asin120)
-#x3: 90+120 = 210 
-    # add (acos210, asin210)
-
-#math.cos and numpy.cos take in rad
-
-#need to mess w this later to make rotation look less jank
-
-def deg2Rad(deg):
-    return deg*math.pi/180
-
-def g2x(app, x): #regular graph coordinate --> tkinter x coordinate
-                 #assumes (app.width/2, app.height/2) is origin
-    return x+(app.origin[0])
-
-def g2y(app, y): #regular graph coordinate --> tkinter y coordinate
-                 #assumes (app.width/2, app.height/2) is origin 
-    return (app.origin[1])-y
-
-def vecs2Graph(app, vecs): #takes in 2d ndarray of vecs [x,y,z]
-    graphPoints = np.empty((0,2))
-
-    for vec in vecs:
-        tx = vec[0]*math.cos(app.xAxisAngle) + vec[1]*(math.cos(app.yAxisAngle))
-        ty = vec[0]*math.sin(app.xAxisAngle) + vec[1]*(math.sin(app.yAxisAngle)) + vec[2]
-        tx = g2x(app, tx)
-        ty = g2y(app, ty)
-        newPoint = np.array([[tx,ty]])
-        graphPoints = np.append(graphPoints, newPoint, axis=0)
-
-    return graphPoints
-
-def graph2Vecs(app, graph, z=0): #takes in 2d ndarray of points [x,y]
-    ox, oy = app.origin
-    vecs = np.empty((0,3))
-
-    ''' 
-    matrix A (2x2)
-    cos xAxisAngle      cos yAxisAngle
-    sin xAxisAngle      sin yAxisAngle 
-    
-    matrix b (2x1)
-    x
-    y
-    
-    matrix v (2x1)
-    a <-- xcomponent in vector
-    b <-- ycomponent in vector 
-
-    the zcomponent is 0 (floor is level), as a default
-    
-    we solve Av = b 
-    v = Ainv * b 
-    '''
-
-    #matrix A 
-    A = np.array([[math.cos(app.xAxisAngle), math.cos(app.yAxisAngle)],
-                  [math.sin(app.xAxisAngle), math.sin(app.yAxisAngle)]])
-
-    Ainv = np.linalg.inv(A)
-
-    for point in graph: 
-        #first adjust points
-        x = point[0] - ox #x coord in graph (centered at 0,0)
-        y = oy - point[1] #y coord in graph (centered at 0,0)
-
-        #vector b 
-        b = np.array([x,y])
-
-        #vector v = [x  y  z]
-        v = Ainv @ b
-        #print(v)
-        v = np.append(v, z) #add on z coord 
-        vecs = np.append(vecs, [v], axis=0)
-
-    return vecs
-
-def rotateVec(app, vec, angle, axis): #3D vecs? 
-    if angle%360 == 0:
-        return vec 
-
-    a = deg2Rad(angle)
-
-    #x,y,z = vec[0], vec[1], vec[2]
-    #x,y,z = 0,0,1 rotate around z axis
-
-    x,y,z = axis 
-
-    #rotation matrix formula from 
-    #https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/rotate3d()
-
-    #first row
-    r11 = 1 + (1-math.cos(a))*(x**2 - 1)
-    r12 = z*math.sin(a) + x*y*(1-math.cos(a))
-    r13 = -y*math.sin(a) + x*z*(1-math.cos(a))
-    
-    #second row 
-    r21 = -z*math.sin(a) + x*y*(1-math.cos(a))
-    r22 = 1 + (1-math.cos(a))*(y**2 - 1)
-    r23 = x*math.sin(a) + y*z*(1-math.cos(a))
-
-    #third row 
-    r31 = y*math.sin(a) + x*z*(1-math.cos(a))
-    r32 = -x*math.sin(a) + y*z*(1-math.cos(a))
-    r33 = 1 + (1-math.cos(a))*(z**2 - 1)
-
-    #rotation matrix 
-    R = np.array([[r11, r12, r13], 
-                  [r21, r22, r23],
-                  [r31, r32, r33]])
-
-    rotatedVec = R @ vec
-    return rotatedVec
+from threedimfunctions import *
+from cube import *
 
 def appStarted(app):
     app.rotationAngle = 0
@@ -193,6 +69,18 @@ def appStarted(app):
                                 [150, 120,  60]])
     app.sampleCubeCoords = vecs2Graph(app, app.sampleCube)
     app.view = False
+
+    app.classCube = Cube(50,100,150, (100,100,100))
+
+def rotateCube(app, cube, angle, rotAxis=(0,0,1)):
+    newCube = np.empty((0,3))
+    for vec in cube:
+        if vec[0]==vec[1]==vec[2]==0:
+            rotatedVec = vec
+        else:
+            rotatedVec = rotateVec(app, vec, 10, rotAxis)
+        newCube = np.append(newCube, [rotatedVec], axis=0)
+    return newCube
 
 def keyPressed(app, event):
 
@@ -264,49 +152,19 @@ def keyPressed(app, event):
 
     elif event.key == 'r':
         #rotating cUbE
-        newCube = np.empty((0,3))
-        for vec in app.CUBE:
-            if vec[0]==vec[1]==vec[2]==0:
-                rotatedVec = vec
-            else:
-                rotatedVec = rotateVec(app, vec, 10, [0,0,1])
-            #print(rotatedVec)
-            #print(vec)
-            newCube = np.append(newCube, [rotatedVec], axis=0)
-        app.CUBE = newCube
+        app.CUBE = rotateCube(app, app.CUBE, 10)
 
         #custom cube floor
         if app.cubeFloorVecs.shape[0]==8:
-            newFloorCube = np.empty((0,3))
-            for vec in app.cubeFloorVecs:
-                if vec[0]==vec[1]==vec[2]==0:
-                    rotatedVec = vec
-                else:
-                    rotatedVec = rotateVec(app, vec, 10, [0,0,1])
-                newFloorCube = np.append(newFloorCube, [rotatedVec], axis=0)
-            app.cubeFloorVecs = newFloorCube
+            app.cubeFloorVecs = rotateCube(app, app.cubeFloorVecs, 10)
             app.cubeFloorCoords = vecs2Graph(app, app.cubeFloorVecs)
 
         #sample cube floor
-        newFloorCube = np.empty((0,3))
-        for vec in app.sampleCubeFloor:
-            if vec[0]==vec[1]==vec[2]==0:
-                rotatedVec = vec
-            else:
-                rotatedVec = rotateVec(app, vec, 10, [0,0,1])
-            newFloorCube = np.append(newFloorCube, [rotatedVec], axis=0)
-        app.sampleCubeFloor = newFloorCube
+        app.sampleCubeFloor = rotateCube(app, app.sampleCubeFloor, 10)
         app.sampleCubeFloorCoords = vecs2Graph(app, app.sampleCubeFloor) 
         
         #sample cube
-        newCube = np.empty((0,3))
-        for vec in app.sampleCube:
-            if vec[0]==vec[1]==vec[2]==0:
-                rotatedVec = vec
-            else:
-                rotatedVec = rotateVec(app, vec, 10, [0,0,1])
-            newCube = np.append(newCube, [rotatedVec], axis=0)
-        app.sampleCube = newCube
+        app.sampleCube = rotateCube(app, app.sampleCube, 10)
         app.sampleCubeCoords = vecs2Graph(app, app.sampleCube) 
 
         #for reference, rotating the "axes" of the cube objs
@@ -349,7 +207,6 @@ def keyPressed(app, event):
         #change view
         app.view = not app.view
 
-   # print(app.CUBE)
     #update cubepoints 
     app.CUBEPOINTS = vecs2Graph(app, app.CUBE)
 
@@ -360,11 +217,9 @@ def keyPressed(app, event):
     if app.rightWallCoords.shape[0] == 4:
         app.rightWallCoords = vecs2Graph(app, app.rightWallVecs)
         app.leftWallCoords = vecs2Graph(app, app.leftWallVecs)
-    #print(app.CUBE)
-    #print(app.CUBEPOINTS)
 
-def makeCubeFloor(app, event):
-    th = np.array([0,0,10]) #thickness of the floor, arbitrary for now 
+def makeCubeFloor(app, event, thickness=10):
+    th = np.array([0,0,thickness]) #thickness of the floor, arbitrary for now 
     if app.cubeFloorVecs.shape[0] == 0: #rows
         firstPoint = np.array([event.x, event.y])
         e1 = graph2Vecs(app, [firstPoint])[0]
@@ -383,11 +238,7 @@ def makeCubeFloor(app, event):
         for vec in [e2, e3, e4]:
             app.cubeFloorVecs = np.append(app.cubeFloorVecs, [vec], axis=0)
             app.cubeFloorVecs = np.append(app.cubeFloorVecs, [vec+th], axis=0)
-
         app.cubeFloorCoords = vecs2Graph(app, app.cubeFloorVecs)
-        #print(app.cubeFloorVecs)
-
-        #app.cubeFloorVecs = np.append(app.cubeFloorVecs, )
 
 def makeFloor(app, event): 
     if app.floorCoords.shape[0] == 0: #rows
@@ -545,9 +396,18 @@ def mouseMoved(app, event):
 
         app.tempLeftWallCoords = np.array([lw0, lw1, lw2, lw3])
 
-def redrawAll(app, canvas):
-    if not app.view:
+def drawCube(app, canvas, cubeCoords, color='black'):
+    for i in range(cubeCoords.shape[0]):
+        p1 = cubeCoords[i]
+        for j in range(cubeCoords.shape[0]):
+            p2 = cubeCoords[j]
+            canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill=color)
 
+def redrawAll(app, canvas):
+    c = vecs2Graph(app, app.classCube.vecs)
+    drawCube(app, canvas, c, 'orange')
+
+    if not app.view:
         ox, oy = app.origin
 
         #z axis
@@ -564,51 +424,19 @@ def redrawAll(app, canvas):
         canvas.create_line(ox, oy, yAxisx, yAxisy)
 
         #get a sample cube floor 
-        for i in range(app.sampleCubeFloorCoords.shape[0]): #rows
-            p1 = app.sampleCubeFloorCoords[i]
-            #v1 = app.cubeFloorVecs[i]
-            for j in range(app.sampleCubeFloorCoords.shape[0]): #rows
-                p2 = app.sampleCubeFloorCoords[j]
-                #v2 = app.CUBE[j]
-                #diffVec = v1-v2 
-                #if math.sqrt(diffVec[0]**2 + diffVec[1]**2 + diffVec[2]**2) <= 60: 
-                canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill = 'green')
+        drawCube(app, canvas, app.sampleCubeFloorCoords, 'green')
 
         #and a sample cube on top of the floor
-        for i in range(app.sampleCube.shape[0]): #rows
-            p1 = app.sampleCubeCoords[i]
-            #v1 = app.cubeFloorVecs[i]
-            for j in range(app.sampleCube.shape[0]): #rows
-                p2 = app.sampleCubeCoords[j]
-                #v2 = app.CUBE[j]
-                #diffVec = v1-v2 
-                #if math.sqrt(diffVec[0]**2 + diffVec[1]**2 + diffVec[2]**2) <= 60: 
-                canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill = 'blue')
+        drawCube(app, canvas, app.sampleCubeCoords, 'blue')
 
         #cube floor (moving)
         if app.drawCubeFloor and app.cubeFloorVecs.shape[0]==2:
-            for i in range(app.tempCubeFloorCoords.shape[0]): #rows
-                p1 = app.tempCubeFloorCoords[i]
-                #v1 = app.cubeFloorVecs[i]
-                for j in range(app.tempCubeFloorCoords.shape[0]): #rows
-                    p2 = app.tempCubeFloorCoords[j]
-                    #v2 = app.CUBE[j]
-                    #diffVec = v1-v2 
-                    #if math.sqrt(diffVec[0]**2 + diffVec[1]**2 + diffVec[2]**2) <= 60: 
-                    canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill = 'blue')
-
+            drawCube(app, canvas, app.tempCubeFloorCoords, 'red')
+            
         #cube floor (static)
         if app.drawCubeFloor and app.cubeFloorVecs.shape[0]==8:
-            for i in range(app.cubeFloorCoords.shape[0]): #rows
-                p1 = app.cubeFloorCoords[i]
-                #v1 = app.cubeFloorVecs[i]
-                for j in range(app.cubeFloorCoords.shape[0]): #rows
-                    p2 = app.cubeFloorCoords[j]
-                    #v2 = app.CUBE[j]
-                    #diffVec = v1-v2 
-                    #if math.sqrt(diffVec[0]**2 + diffVec[1]**2 + diffVec[2]**2) <= 60: 
-                    canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill = 'blue')
-
+            drawCube(app, canvas, app.cubeFloorCoords, 'red')
+         
         #floor 
         if app.drawFloor and app.floorCoords.shape[0]==1:
             c0,d0 = app.tempFloorCoords[0]

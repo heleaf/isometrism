@@ -14,6 +14,18 @@ def getStdBasis(n): #for R^n
 #powerset 
 
 '''
+            for i in range(app.tempCubeFloorCoords.shape[0]): #rows
+                p1 = app.tempCubeFloorCoords[i]
+                #v1 = app.cubeFloorVecs[i]
+                for j in range(app.tempCubeFloorCoords.shape[0]): #rows
+                    p2 = app.tempCubeFloorCoords[j]
+                    #v2 = app.CUBE[j]
+                    #diffVec = v1-v2 
+                    #if math.sqrt(diffVec[0]**2 + diffVec[1]**2 + diffVec[2]**2) <= 60: 
+                    canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill = 'blue')
+            '''
+
+'''
 STD3 = np.array([[1,0,0],
                 [0,1,0],
                 [0,0,1]]) #x,y,z 
