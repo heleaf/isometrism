@@ -49,44 +49,6 @@ def appStarted(app):
     app.lw = Cube(200,10,200, (50,40,0))
     app.test = [app.fv, app.rw, app.lw]
 
-    app.cameraOrigin = np.array([130,130,100])
-    app.imageTopLeft = np.array([270,  45, 200])
-    a3 = app.imageTopLeft - app.cameraOrigin
-    a1 = np.array([-1,0,0])
-    a2 = np.array([0,0,-1])
-
-    app.cameraMatrix = np.zeros((3,3))
-    cameraBasis = [a1,a2,a3]
-    for i in range(len(cameraBasis)):
-        app.cameraMatrix[:, i] = cameraBasis[i] #adding in columns 
-
-    inv = np.linalg.inv(app.cameraMatrix)
-    #print(app.cameraMatrix)
-
-    vecs2Modify = np.zeros((3,8))
-    #print(vecs2Modify)
-    for i in range (app.lw.vecs.shape[0]):
-        vecs2Modify[:, i] = app.lw.vecs[i]
-    #print(vecs2Modify)
-
-    projectionLW = inv @ vecs2Modify 
-    #print(projectionLW)
-
-    #print(projectionLW.shape)
-
-    app.imageCoords = np.zeros((2,8))
-    for i in range(projectionLW.shape[1]): # in terms of columns
-        col = projectionLW[:,i]
-        divisor = col[2]
-        projectionLW[:,i] /= divisor
-        app.imageCoords[:, i] = projectionLW[:2, i]
-
-    print('imageCoords')
-    print(app.imageCoords.T)
-
-    #print(a1)
-    #app.cameraBasis = [[-1,0,0], [0,0,-1], []]
-
     app.sampleCubeFloorVecs = np.array([[287.7097569,   39.75633592,  0.        ],
                                     [287.7097569,   39.75633592,  10.        ],
                                     [ 43.73894914, 301.26997008,   0.        ],
@@ -138,6 +100,44 @@ def appStarted(app):
     app.makeCubes = False
     app.tracker = 0
 
+    #### perspective rendering 
+    app.cameraOrigin = np.array([130,130,100])
+    app.imageTopLeft = np.array([150,  40, 200])
+
+    #these things change based on your rotation // image view (camera origin may change too / stay the same?)
+    a1 = np.array([-1,0,0]) #--> "right" direction on the image plane
+    a2 = np.array([0,0,-1]) #--> "down" direction on the image plane 
+    a3 = app.imageTopLeft - app.cameraOrigin #vector from camera to the top left corner of image plane
+
+    cameraBasis = np.array([a1,a2,a3]).T #put basis vecs in as rows, then transpose so they are cols
+    app.cameraBasis = cameraBasis
+
+    app.lwImageCoords = perspectiveRender(app, cameraBasis, app.lw.vecs)
+    app.floorImageCoords = perspectiveRender(app, cameraBasis, app.fv.vecs)
+    app.ccImageCoords = perspectiveRender(app, cameraBasis, app.classCube2.vecs)
+    app.rwImageCoords = perspectiveRender(app, cameraBasis, app.rw.vecs)
+    app.miscImageCoords = []
+    #print(app.floorImageCoords)
+    #print(app.lwImageCoords)
+
+def perspectiveRender(app, cameraBasis, cubeVectors): 
+    #takes in: cameraOrigin (vector), 
+    #          cameraBasis (matrix w/ columns as vectors of camera's basis)
+    #          cubeVectors (matrix w/ vectors as rows)
+    #returns matrix of coordinates to render (coordinates as rows)
+
+    #get new basis of cubeVectors (matrix w/ vectors as columns)
+    cameraViewCubeVecs = np.linalg.inv(cameraBasis) @ cubeVectors.T
+
+    imageCoords = np.zeros((2,8))
+    for i in range(cameraViewCubeVecs.shape[1]): # in terms of columns
+        col = cameraViewCubeVecs[:,i] #a cube vector 
+        divisor = col[2] 
+        cameraViewCubeVecs[:,i] /= divisor #scale down to get points in the image plane 
+        imageCoords[:, i] = cameraViewCubeVecs[:2, i] #use first two components only 
+    
+    return imageCoords.T
+
 def rotateCube(app, cube, angle, rotAxis=(0,0,1)):
     newCube = np.empty((0,3))
     for vec in cube:
@@ -154,6 +154,7 @@ def keyPressed(app, event):
         app.makeCubes = not app.makeCubes 
         app.misc = [app.classCube, app.classCube2] 
         app.tracker = 0
+        app.miscImageCoords = []
     elif event.key == '2':
         #try shifting origin? 
         #app.origin = (app.origin[0]+20, app.origin[1]+20)
@@ -428,13 +429,9 @@ def mouseDragged(app, event):
         app.newCube = Cube(30, 30, 30, origin)
         if app.tempMisc != []:
             app.tempMisc[-1] = app.newCube
-        #print(app.newCube.origin)
 
 def mouseReleased(app, event):
     if app.makeCubes:
-        #origin = graph2Vecs(app, [[event.x, event.y]])[0]
-        #app.newCube = Cube(30, 30, 30, origin) 
-        #ox,oy,oz = app.newCube.origin
 
         if (app.newCube.origin[0] + app.newCube.length > app.fv.origin[0] + app.fv.length):
             ox = app.fv.origin[0] + app.fv.length - app.newCube.length 
@@ -460,6 +457,8 @@ def mouseReleased(app, event):
                 #return
             # or cube.origin[0] + cube.length < app.newCube.origin[0] + app.newCube.length):
 
+        imc = perspectiveRender(app, app.cameraBasis, app.newCube.vecs)
+        app.miscImageCoords.append(imc)
         app.misc.append(app.newCube)
         print(app.misc[-1].origin)
         app.tempMisc.pop()
@@ -561,14 +560,17 @@ def redrawAll(app, canvas):
             canvas.create_line(ox,oy,x,y, fill='orange')
     else:
         #here's our view window
-        #start by facing the X Axis 
-        drawCube(app, canvas, app.imageCoords.T, color = 'purple')
-        for coord in app.imageCoords.T:
-            x,y = coord
-            r=2
-            canvas.create_oval(x-r, y-r, x+r, y+r, fill = 'purple')
-        #def drawCube(app, canvas, cubeCoords, color='black'):
-        pass
+        drawCube(app, canvas, app.lwImageCoords, color = 'purple')
+        drawCube(app, canvas, app.floorImageCoords, color = 'purple')
+        #drawCube(app, canvas, app.ccImageCoords, color = 'orange')
+        #drawCube(app, canvas, app.rwImageCoords, color = 'purple')
+        for imc in app.miscImageCoords:
+            drawCube(app, canvas, imc, color = 'orange')
+        #for coord in app.lwImageCoords:
+        #    x,y = coord
+        #    r=2
+        #    canvas.create_oval(x-r, y-r, x+r, y+r, fill = 'purple')
+        #pass
 
 runApp(width=600, height=600)
 

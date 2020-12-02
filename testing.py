@@ -155,9 +155,9 @@ print(math.cos(deg2Rad(330)), math.sin(deg2Rad(330)))
 
         '''
         #x axis
-        xAxisx = g2x(app, app.width*(math.cos(app.xAxisAngle)))
-        xAxisy = g2y(app, app.height*(math.sin(app.xAxisAngle)))
-        canvas.create_line(ox, oy, xAxisx, xAxisy)
+        #xAxisx = g2x(app, app.width*(math.cos(app.xAxisAngle)))
+        #xAxisy = g2y(app, app.height*(math.sin(app.xAxisAngle)))
+        #canvas.create_line(ox, oy, xAxisx, xAxisy)
 
         '''
                 xAxisCoords = vecs2Graph(app, [app.xAxisVec])[0]
@@ -182,6 +182,48 @@ print(math.cos(deg2Rad(330)), math.sin(deg2Rad(330)))
     elif event.key == 'r':
     
         '''
+
+'''
+#### perspective rendering 
+    app.cameraOrigin = np.array([130,130,100])
+    app.imageTopLeft = np.array([200,  45, 200])
+
+    #these things change based on your rotation // image view (camera origin may change too / stay the same?)
+    a3 = app.imageTopLeft - app.cameraOrigin
+    a1 = np.array([-1,0,0])
+    a2 = np.array([0,0,-1])
+
+    '''
+    '''app.cameraMatrix = np.zeros((3,3))
+    cameraBasis = [a1,a2,a3]
+    for i in range(len(cameraBasis)):
+        app.cameraMatrix[:, i] = cameraBasis[i] #adding in columns '''
+    '''
+    cameraBasis = np.array([a1,a2,a3])
+    
+    app.cameraMatrix = cameraBasis.T
+
+    #vecs2Modify = np.zeros((3,8))
+    #print(vecs2Modify)
+    #for i in range (app.lw.vecs.shape[0]):
+    #    vecs2Modify[:, i] = app.lw.vecs[i]
+    #print(vecs2Modify)
+
+    projectionLW = np.linalg.inv(app.cameraMatrix) @ app.lw.vecs.T 
+
+    app.imageCoords = np.zeros((2,8))
+    for i in range(projectionLW.shape[1]): # in terms of columns
+        col = projectionLW[:,i]
+        divisor = col[2]
+        projectionLW[:,i] /= divisor
+        app.imageCoords[:, i] = projectionLW[:2, i] #add in first two components only 
+
+    print('imageCoords')
+    print(app.imageCoords.T)
+
+    app.lwImageCoords = perspectiveRender(app, cameraBasis, app.lw.vecs)
+    print(app.lwImageCoords)
+'''
 
 def drawVector(app, canvas):
     #origin
