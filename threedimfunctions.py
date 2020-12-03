@@ -101,7 +101,7 @@ def rotateVec(app, vec, angle, axis): #3D vecs?
     #x,y,z = vec[0], vec[1], vec[2]
     #x,y,z = 0,0,1 rotate around z axis
 
-    x,y,z = axis 
+    x,y,z = axis[0], axis[1], axis[2] 
 
     #rotation matrix formula from 
     #https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/rotate3d()

@@ -5,7 +5,7 @@ from threedimfunctions import *
 from oldfloor import *
 from cube import *
 
-def appStarted(app):
+def initialize(app):
     app.rotationAngle = 0
 
     app.xRotationAngle = 0
@@ -19,14 +19,14 @@ def appStarted(app):
     app.xAxisAngle = deg2Rad(app.xAxisInitAngle+app.rotationAngle)
     app.yAxisAngle = deg2Rad(app.yAxisInitAngle+app.rotationAngle)
 
-    app.CUBE = np.array([[0,0,0],
-                        [50,0,0],
-                        [0,50,0],
-                        [0,0,50],
-                        [50,50,0],
-                        [50,0,50],
-                        [0,50,50],
-                        [50,50,50]])
+    app.CUBE = np.array([[10,10,0],
+                        [60,10,0],
+                        [10,60,0],
+                        [10,10,50],
+                        [60,60,0],
+                        [60,10,50],
+                        [10,60,50],
+                        [60,60,50]])
     app.CUBEPOINTS = vecs2Graph(app, app.CUBE)
     app.showUnitCube = False
 
@@ -43,11 +43,6 @@ def appStarted(app):
     app.rightCubeWallCoords = np.empty((0,2))
     app.tempLeftCubeWallCoords = np.empty((0,2))
     app.tempRightCubeWallCoords = np.empty((0,2))
-
-    app.fv = Cube(200,200,10, (50,50,0))
-    app.rw = Cube(10,200,200, (40,50,0))
-    app.lw = Cube(200,10,200, (50,40,0))
-    app.test = [app.fv, app.rw, app.lw]
 
     app.sampleCubeFloorVecs = np.array([[287.7097569,   39.75633592,  0.        ],
                                     [287.7097569,   39.75633592,  10.        ],
@@ -89,6 +84,14 @@ def appStarted(app):
                                 [100, 120,  60],
                                 [150, 120,  60]])
     app.sampleCubeCoords = vecs2Graph(app, app.sampleCubeVecs)
+
+def appStarted(app):
+    initialize(app)
+
+    app.fv = Cube(200,200,10, (50,50,0))
+    app.rw = Cube(10,200,200, (40,50,0))
+    app.lw = Cube(200,10,200, (50,40,0))
+    app.test = [app.fv, app.rw, app.lw]
     
     app.view = False
     #app.misc = []
@@ -101,27 +104,66 @@ def appStarted(app):
     app.tracker = 0
 
     #### perspective rendering 
-    app.cameraOrigin = np.array([130,130,100])
-    app.imageTopLeft = np.array([150,  40, 200])
+    app.cameraOrigin = np.array([130,280,60])
+    imageDistance = 100
+    imageLength = 120
+    imageHeight = 120
+    app.imageTopLeft = app.cameraOrigin + np.array([imageLength/2,imageHeight/2,imageDistance])
+    #app.imageTopLeft = np.array([200,250,80])
+    #app.imageTopRight = np.array([])
+
 
     #these things change based on your rotation // image view (camera origin may change too / stay the same?)
-    a1 = np.array([-1,0,0]) #--> "right" direction on the image plane
-    a2 = np.array([0,0,-1]) #--> "down" direction on the image plane 
+    a1 = np.array([-(app.width/imageLength),0,0]) #--> "right" direction on the image plane
+    a2 = np.array([0,0,-(app.height/imageHeight)]) #--> "down" direction on the image plane 
     a3 = app.imageTopLeft - app.cameraOrigin #vector from camera to the top left corner of image plane
+    #a3 = app.cameraOrigin - app.imageTopLeft
+    app.cameraBasis = np.array([a1,a2,a3]) #put basis vecs in as rows, then transpose so they are cols
+    #app.cameraBasis = cameraBasis
+    #print(a1, a2, a3)
+    #print(app.cameraBasis)
+    #print(app.cameraBasis.T)
 
-    cameraBasis = np.array([a1,a2,a3]).T #put basis vecs in as rows, then transpose so they are cols
-    app.cameraBasis = cameraBasis
-
-    app.lwImageCoords = perspectiveRender(app, cameraBasis, app.lw.vecs)
-    app.floorImageCoords = perspectiveRender(app, cameraBasis, app.fv.vecs)
-    app.ccImageCoords = perspectiveRender(app, cameraBasis, app.classCube2.vecs)
-    app.rwImageCoords = perspectiveRender(app, cameraBasis, app.rw.vecs)
+    app.lwImageCoords = perspectiveRender(app, app.cameraBasis.T, app.lw.vecs)
+    app.floorImageCoords = perspectiveRender(app, app.cameraBasis.T, app.fv.vecs)
+    app.ccImageCoords = perspectiveRender(app, app.cameraBasis.T, app.classCube.vecs)
+    app.rwImageCoords = perspectiveRender(app, app.cameraBasis.T, app.rw.vecs)
     app.miscImageCoords = []
+
+    app.unitCubeCoords = perspectiveRender(app, app.cameraBasis.T, app.CUBE)
     #print(app.floorImageCoords)
     #print(app.lwImageCoords)
+    #for coord in app.lwImageCoords: 
+    #    app.uhhh = np.append(app.uhhh, [coord+np.array([app.width, app.height*1.2])], axis=0)
+
+    #for i in range(1):
+        #R2D = np.array([[math.cos(math.pi), -math.sin(math.pi)],
+        #                [math.sin(math.pi),  math.cos(math.pi)]])
+
+        #R2D = np.array([[1, 0],
+        #                [0,-1]])
+
+        #print(app.lwImageCoords)
+        #for i in range(app.lwImageCoords.shape[0]):
+        #    app.lwImageCoords[i] = R2D @ app.lwImageCoords[i] 
+        #    app.lwImageCoords[i] += np.array([app.width, app.height])
+
+        #for i in range(app.rwImageCoords.shape[0]):
+        #    app.rwImageCoords[i] = R2D @ app.rwImageCoords[i]
+        #    app.rwImageCoords[i] += np.array([app.width,app.height])
+        
+        #for i in range(app.floorImageCoords.shape[0]):
+        #    app.floorImageCoords[i] = R2D @ app.floorImageCoords[i]
+        #   app.floorImageCoords[i] += np.array([app.width, app.height])
+        #print(app.floor)
+        #app.lwImageCoords = R2D @ app.lwImageCoords
+        #app.floorImageCoords = R2D @ app.lwImageCoords
+        #app.rwImageCoords = R2D @ app.lwImageCoords
+        #for coord in app.rwImageCoords: 
+        #    app.uhhh2 = np.append(app.uhhh2, [coord+np.array([app.width, app.height*1.2])], axis=0)
 
 def perspectiveRender(app, cameraBasis, cubeVectors): 
-    #takes in: cameraOrigin (vector), 
+    #takes in: cameraOrigin(vector), 
     #          cameraBasis (matrix w/ columns as vectors of camera's basis)
     #          cubeVectors (matrix w/ vectors as rows)
     #returns matrix of coordinates to render (coordinates as rows)
@@ -130,6 +172,7 @@ def perspectiveRender(app, cameraBasis, cubeVectors):
     cameraViewCubeVecs = np.linalg.inv(cameraBasis) @ cubeVectors.T
 
     imageCoords = np.zeros((2,8))
+    #print(cameraViewCubeVecs.shape[1])
     for i in range(cameraViewCubeVecs.shape[1]): # in terms of columns
         col = cameraViewCubeVecs[:,i] #a cube vector 
         divisor = col[2] 
@@ -148,73 +191,74 @@ def rotateCube(app, cube, angle, rotAxis=(0,0,1)):
         newCube = np.append(newCube, [rotatedVec], axis=0)
     return newCube
 
-def keyPressed(app, event):
+def toggleMakeCubes(app):
+    app.makeCubes = not app.makeCubes 
+    app.misc = [app.classCube, app.classCube2] 
+    app.tracker = 0
+    app.miscImageCoords = []
+def changeAxisAngles(app):
 
-    if event.key == '1':
-        app.makeCubes = not app.makeCubes 
-        app.misc = [app.classCube, app.classCube2] 
-        app.tracker = 0
-        app.miscImageCoords = []
-    elif event.key == '2':
-        #try shifting origin? 
-        #app.origin = (app.origin[0]+20, app.origin[1]+20)
-        #works 
+    #try shifting origin? 
+    #app.origin = (app.origin[0]+20, app.origin[1]+20)
+    #works 
+    #try changing initial angles? 
+    app.xAxisInitAngle-=10
+    app.yAxisInitAngle+=10
+    app.xAxisAngle = deg2Rad(app.xAxisInitAngle+app.rotationAngle)
+    app.yAxisAngle = deg2Rad(app.yAxisInitAngle+app.rotationAngle)
+    #works 
+def resetDrawCubeFloor(app):
+    app.drawCubeFloor = not app.drawCubeFloor
+    app.cubeFloorVecs = np.empty((0,3))
+    app.tempCubeFloorVecs = np.empty((0,3))
+    app.cubeFloorCoords = np.empty((0,2))
+    app.tempCubeFloorCoords = np.empty((0,2))
 
-        #try changing initial angles? 
-        app.xAxisInitAngle-=10
-        app.yAxisInitAngle+=10
-        app.xAxisAngle = deg2Rad(app.xAxisInitAngle+app.rotationAngle)
-        app.yAxisAngle = deg2Rad(app.yAxisInitAngle+app.rotationAngle)
-        #works 
+    app.cubeWallHeight = None
+    app.leftCubeWallCoords = np.empty((0,2))
+    app.rightCubeWallCoords = np.empty((0,2))
+    app.leftCubeWallVecs = np.empty((0,3))
+    app.rightCubeWallVecs = np.empty((0,3))
+
+    app.tempLeftCubeWallCoords = np.empty((0,2))
+    app.tempRightCubeWallCoords = np.empty((0,2))
+    app.tempLeftCubeWallVecs = np.empty((0,3))
+    app.tempRightCubeWallVecs = np.empty((0,3))
+def rotateSamples(app):
+    #sample cube floor
+    app.sampleCubeFloorVecs = rotateCube(app, app.sampleCubeFloorVecs, 10)
+    app.sampleCubeFloorCoords = vecs2Graph(app, app.sampleCubeFloorVecs) 
+
+    app.sampleCubeRWVecs = rotateCube(app, app.sampleCubeRWVecs, 10)
+    app.sampleCubeRWCoords = vecs2Graph(app, app.sampleCubeRWVecs)
+
+    app.sampleCubeLWVecs = rotateCube(app, app.sampleCubeLWVecs, 10)
+    app.sampleCubeLWCoords = vecs2Graph(app, app.sampleCubeLWVecs)
     
-    elif event.key == '4':
-        app.drawCubeFloor = not app.drawCubeFloor
-        app.cubeFloorVecs = np.empty((0,3))
-        app.tempCubeFloorVecs = np.empty((0,3))
-        app.cubeFloorCoords = np.empty((0,2))
-        app.tempCubeFloorCoords = np.empty((0,2))
+    #sample cube
+    app.sampleCubeVecs = rotateCube(app, app.sampleCubeVecs, 10)
+    app.sampleCubeCoords = vecs2Graph(app, app.sampleCubeVecs) 
 
-        app.cubeWallHeight = None
-        app.leftCubeWallCoords = np.empty((0,2))
-        app.rightCubeWallCoords = np.empty((0,2))
-        app.leftCubeWallVecs = np.empty((0,3))
-        app.rightCubeWallVecs = np.empty((0,3))
+def keyPressed(app, event): 
 
-        app.tempLeftCubeWallCoords = np.empty((0,2))
-        app.tempRightCubeWallCoords = np.empty((0,2))
-        app.tempLeftCubeWallVecs = np.empty((0,3))
-        app.tempRightCubeWallVecs = np.empty((0,3))
-
-    elif event.key == 'h':
-        #toggle unit cube
-        app.showUnitCube = not app.showUnitCube
-
-    elif event.key == 'r':
+    if event.key == '1': toggleMakeCubes(app)
+    elif event.key == '2': changeAxisAngles(app)
+    elif event.key == '4': resetDrawCubeFloor(app)
+    elif event.key == 'h': app.showUnitCube = not app.showUnitCube  #toggle unit cube
         
+    elif event.key == 'r':
         for cube in app.misc[2:]:
             cube.vecs = rotateCube(app, cube.vecs, 10)
             pass
         for cube in [app.fv, app.lw, app.rw]:
             cube.vecs = rotateCube(app, cube.vecs, 10)
             pass
+        app.classCube.vecs = rotateCube(app, app.classCube.vecs, 10)
 
         #rotating cUbE
         app.CUBE = rotateCube(app, app.CUBE, 10)
-    
-        #sample cube floor
-        app.sampleCubeFloorVecs = rotateCube(app, app.sampleCubeFloorVecs, 10)
-        app.sampleCubeFloorCoords = vecs2Graph(app, app.sampleCubeFloorVecs) 
-
-        app.sampleCubeRWVecs = rotateCube(app, app.sampleCubeRWVecs, 10)
-        app.sampleCubeRWCoords = vecs2Graph(app, app.sampleCubeRWVecs)
-
-        app.sampleCubeLWVecs = rotateCube(app, app.sampleCubeLWVecs, 10)
-        app.sampleCubeLWCoords = vecs2Graph(app, app.sampleCubeLWVecs)
+        rotateSamples(app)
         
-        #sample cube
-        app.sampleCubeVecs = rotateCube(app, app.sampleCubeVecs, 10)
-        app.sampleCubeCoords = vecs2Graph(app, app.sampleCubeVecs) 
-
         #for reference, rotating the "axes" of the cube objs
         rotatedXAxisVec = rotateVec(app, app.xAxisVec, 10, [0,0,1])
         rotatedYAxisVec = rotateVec(app, app.yAxisVec, 10, [0,0,1])
@@ -238,35 +282,35 @@ def keyPressed(app, event):
         for row in app.CUBE: 
             row[2]+=10
         #move the cube up
-
     elif event.key =='s':
         for row in app.CUBE:
             row[2]-=10
         #move the cube down
-
     elif event.key == 'a':
         for row in app.CUBE: 
             row[0]+=10
         #move the cube left (x) 
-
     elif event.key == 'd':
         for row in app.CUBE:
             row[0]-=10
         #move the cube right (x)
-
     elif event.key == 'z':
         for row in app.CUBE:
             row[1]-=10
         #move the cube left (y)
-    
     elif event.key == 'x':
         for row in app.CUBE:
             row[1]+=10
         #move the cube right (y)
-
-    elif event.key == 'v':
-        #change view
-        app.view = not app.view
+    elif event.key == 'v':   app.view = not app.view      #change view
+        
+    elif event.key == 'c':
+        if app.view: #rotation? 
+            app.cameraBasis = rotateCube(app, app.cameraBasis,10)
+            app.lwImageCoords = perspectiveRender(app, app.cameraBasis.T, app.lw.vecs)
+            app.floorImageCoords = perspectiveRender(app, app.cameraBasis.T, app.fv.vecs)
+            app.ccImageCoords = perspectiveRender(app, app.cameraBasis.T, app.classCube2.vecs)
+            app.rwImageCoords = perspectiveRender(app, app.cameraBasis.T, app.rw.vecs)
 
     #update cubepoints 
     app.CUBEPOINTS = vecs2Graph(app, app.CUBE)
@@ -351,8 +395,6 @@ def floatCubeWalls(app, event):
         app.tempLeftCubeWallVecs[i+6] = lwVecs[i] + np.array([0,-10,h])
 
     app.tempLeftCubeWallCoords = vecs2Graph(app, app.tempLeftCubeWallVecs)
-    #print(app.tempRightCubeWallVecs)
-    #print(app.tempRightCubeWallCoords)
 
 def makeCubeWalls(app, event):
     app.cubeWallHeight = app.cubeFloorCoords[3][1]-event.y
@@ -417,11 +459,10 @@ def mousePressed(app, event):
         origin = graph2Vecs(app, [[event.x, event.y]], z=app.fv.height)[0]
         app.newCube = Cube(30, 30, 30, origin)
         app.tempMisc.append(app.newCube)
-    #   cube.rotate(20)
-        #app.cubeWallHeight = False
-        #print(app.cubeFloorCoords)
-    #elif app.cubeWallHeight == False:
-        #makeCubeWalls(app, event)
+
+    c = np.array([[event.x, event.y]])
+    v = graph2Vecs(app, c)[0]
+    print(v)
 
 def mouseDragged(app, event):
     if app.makeCubes:
@@ -432,6 +473,7 @@ def mouseDragged(app, event):
 
 def mouseReleased(app, event):
     if app.makeCubes:
+
 
         if (app.newCube.origin[0] + app.newCube.length > app.fv.origin[0] + app.fv.length):
             ox = app.fv.origin[0] + app.fv.length - app.newCube.length 
@@ -489,9 +531,26 @@ def drawSamples(app, canvas):
     drawCube(app, canvas, app.sampleCubeCoords, 'blue')
 
 def redrawAll(app, canvas):
+
+    if app.view:
+        #here's our view window
+        drawCube(app, canvas, app.lwImageCoords, color = 'purple')
+        drawCube(app, canvas, app.floorImageCoords, color = 'purple')
+        drawCube(app, canvas, app.ccImageCoords, color = 'orange')
+        drawCube(app, canvas, app.rwImageCoords, color = 'purple')
+        for imc in app.miscImageCoords:
+            drawCube(app, canvas, imc, color = 'orange')
+
+        #drawCube(app, canvas, app.unitCubeCoords, color = 'blue')
+        #for coord in app.lwImageCoords:
+        #    x,y = coord
+        #    r=2
+        #    canvas.create_oval(x-r, y-r, x+r, y+r, fill = 'purple')
+        #pass
     
-    if not app.view:
-        for c in app.test:
+    else:
+        drawCube(app, canvas, app.CUBEPOINTS, color='blue')
+        for c in app.test: #walls, floor 
             c = vecs2Graph(app, c.vecs)
             drawCube(app, canvas, c, 'purple')
         for cube in app.misc[2:]:
@@ -500,6 +559,9 @@ def redrawAll(app, canvas):
         for cube in app.tempMisc:
             c = vecs2Graph(app, cube.vecs)
             drawCube(app, canvas, c, 'red')
+        coords = vecs2Graph(app, app.classCube.vecs)
+        drawCube(app, canvas, coords, color = 'orange')
+
         ox, oy = app.origin
         #z axis
         canvas.create_line(ox,oy, ox, 0)
@@ -512,7 +574,7 @@ def redrawAll(app, canvas):
         yAxisy = g2y(app, (app.height)*(math.sin(app.yAxisAngle)))
         canvas.create_line(ox, oy, yAxisx, yAxisy)
 
-        #drawSamples(app, canvas)
+        #drawSamples(app, canvas
 
          #cube floor (static)
         if app.drawCubeFloor and app.cubeFloorVecs.shape[0]==8:
@@ -558,20 +620,7 @@ def redrawAll(app, canvas):
             x,y = yAxisCoords[0][0], yAxisCoords[0][1]
             #print(x,y)
             canvas.create_line(ox,oy,x,y, fill='orange')
-    else:
-        #here's our view window
-        drawCube(app, canvas, app.lwImageCoords, color = 'purple')
-        drawCube(app, canvas, app.floorImageCoords, color = 'purple')
-        #drawCube(app, canvas, app.ccImageCoords, color = 'orange')
-        #drawCube(app, canvas, app.rwImageCoords, color = 'purple')
-        for imc in app.miscImageCoords:
-            drawCube(app, canvas, imc, color = 'orange')
-        #for coord in app.lwImageCoords:
-        #    x,y = coord
-        #    r=2
-        #    canvas.create_oval(x-r, y-r, x+r, y+r, fill = 'purple')
-        #pass
-
+        
 runApp(width=600, height=600)
 
 
