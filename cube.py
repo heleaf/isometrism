@@ -29,6 +29,26 @@ class Cube(object):
         for i in range(self.vecs.shape[0]):
             self.vecs[i] = self.vecs[i]+np.array(self.origin)
 
+        self.topFaceVecs = []
+        self.leftFrontFaceVecs = []
+        self.rightFrontFaceVecs = []
+        self.leftBackFaceVecs = []
+        self.rightBackFaceVecs = []
+        self.botFaceVecs = []
+        for i in range(self.vecs.shape[0]):
+            if self.vecs[i][0] == self.origin[0]+self.length:
+                self.leftFrontFaceVecs.append(i)
+            if self.vecs[i][1] == self.origin[1]+self.width:
+                self.rightFrontFaceVecs.append(i)
+            if self.vecs[i][2] == self.origin[2]+self.height:
+                self.topFaceVecs.append(i)
+            if self.vecs[i][1] == self.origin[1]:
+                self.leftBackFaceVecs.append(i)
+            if self.vecs[i][0] == self.origin[0]:
+                self.rightBackFaceVecs.append(i)
+            if self.vecs[i][2] == self.origin[2]:
+                self.botFaceVecs.append(i)
+
     def rotate(self, angle, axis=(0,0,1)):
         if angle%360 != 0:
             a = deg2Rad(angle)
