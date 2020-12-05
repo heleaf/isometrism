@@ -1,36 +1,14 @@
 import numpy as np
 import math
 
-#https://www.math.tamu.edu/~mpilant/math311/ComputerGraphics.pdf 
-
-#origin = (app.width/2, app.height/2)
-# (x,y)
-
-#in terms of unit circle...
-#z3: subtract height to "increase" , at 90
-    # to add a: add (acos90, asin90)
-    # aka add (0, a) 
-#y3: 120 degrees clockwise: 90-120 = -30 = -30+360 = 330
-    # to add a to y: 
-    # add acos(120) to x
-    # add (acos120, asin120)
-#x3: 90+120 = 210 
-    # add (acos210, asin210)
-
-#math.cos and numpy.cos take in rad
-
-#need to mess w this later to make rotation look less jank
-
 def deg2Rad(deg):
     return deg*math.pi/180
 
-def g2x(app, x): #regular graph coordinate --> tkinter x coordinate
-                 #assumes (app.width/2, app.height/2) is origin
-    return x+(app.origin[0])
+#regular graph coordinate --> tkinter x coordinate
+def g2x(x, originX): return x+originX
 
-def g2y(app, y): #regular graph coordinate --> tkinter y coordinate
-                 #assumes (app.width/2, app.height/2) is origin 
-    return (app.origin[1])-y
+#regular graph coordinate --> tkinter y coordinate
+def g2y(y, originY): return originY-y
 
 def vecs2Graph(app, vecs): #takes in 2d ndarray of vecs [x,y,z]
     graphPoints = np.empty((0,2))
@@ -40,8 +18,9 @@ def vecs2Graph(app, vecs): #takes in 2d ndarray of vecs [x,y,z]
         tx = vec[0]*math.cos(app.xAxisAngle) + vec[1]*(math.cos(app.yAxisAngle))
         #adding the vertical components of the vectors 
         ty = vec[0]*math.sin(app.xAxisAngle) + vec[1]*(math.sin(app.yAxisAngle)) + vec[2]
-        tx = g2x(app, tx)
-        ty = g2y(app, ty)
+        #offset to the origin
+        tx = g2x(tx, app.origin[0])
+        ty = g2y(ty, app.origin[1])
         newPoint = np.array([[tx,ty]])
         graphPoints = np.append(graphPoints, newPoint, axis=0)
 
@@ -97,10 +76,6 @@ def rotateVec(app, vec, angle, axis): #3D vecs?
         return vec 
 
     a = deg2Rad(angle)
-
-    #x,y,z = vec[0], vec[1], vec[2]
-    #x,y,z = 0,0,1 rotate around z axis
-
     x,y,z = axis[0], axis[1], axis[2] 
 
     #rotation matrix formula from 

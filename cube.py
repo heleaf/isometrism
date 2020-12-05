@@ -2,17 +2,22 @@ import numpy as np
 from threedimfunctions import *
 
 class Cube(object):
-
+    refs = set()
+    currentId = 0
     def __init__(self, length, width, height, origin=(0,0,0)):
         self.length = length
         self.width = width
         self.height = height 
 
         self.origin = origin
+        self.name = 'Cube'
 
         l = self.length
         w = self.width
         h = self.height
+
+        self.id = Cube.currentId
+        Cube.currentId+=1
 
         self.vecs = np.array([[0,0,0],
                             [l,0,0],
@@ -48,7 +53,7 @@ class Cube(object):
                 self.rightBackFaceVecs.append(i)
             if self.vecs[i][2] == self.origin[2]:
                 self.botFaceVecs.append(i)
-
+    
     def rotate(self, angle, axis=(0,0,1)):
         if angle%360 != 0:
             a = deg2Rad(angle)
@@ -85,19 +90,27 @@ class Cube(object):
             for i in range(self.vecs.shape[0]):
                 self.vecs[i] = R @ self.vecs[i]
 
-
     def isCollide(self, other):
         if isinstance(other, Cube):
             print(self.vecs)
             print(other.vecs)
-            
             pass
         return None
+
+    def __hash__(self):
+        return hash(self.name, self.id)
+
+    def __repr__(self):
+        return f'{self.name}: {self.id}'
 
 class Table(Cube):
     tableThickness = 5
     legThickness = 3
-    def __init__(self, length, width, height, origin=(0,0,0)):
+    refs = set()
+    currentId = 0
+    def __init__(self, length, width, height, origin=(0,0,0),
+                tableThickness=5, 
+                legThickness=3):
         self.length = length
         self.width = width
         self.height = height 
@@ -105,8 +118,8 @@ class Table(Cube):
         l = self.length
         w = self.width
         h = self.height
-        th = Table.tableThickness
-        t = Table.legThickness
+        th = self.tth = tableThickness
+        t = self.lth = legThickness
 
         self.origin = origin
 
@@ -119,13 +132,34 @@ class Table(Cube):
 
         self.cubes = [self.face, self.leg1, self.leg2, self.leg3, self.leg4]
 
+        self.id = Table.currentId
+        Table.currentId+=1
+        self.name = 'Table'
+
+    def updateVecs(self):
+        self = Table(self.length, self.width, self.height, 
+                     origin=self.origin, tableThickness=self.tth, 
+                     legThickness=self.lth)
+        self.id -= 1 
+        Table.currentId -=1
+
 class Chair(Table):
-    def __init__(self, length, width, height, origin=(0,0,0)):
-        super().__init__(length, width, height/2, origin)
+    refs = set()
+    currentId = 0
+    def __init__(self, length, width, height, origin=(0,0,0), tableThickness=5, 
+                legThickness=3):
+        super().__init__(length, width, height/2, origin, tableThickness, legThickness)
         o = np.array(self.origin) + np.array([0,0,height/2])
-        self.back = Cube(Table.tableThickness, width, height/2, origin = o)
+        self.height = height
+        self.back = Cube(self.tth, width, height/2, origin = o)
         self.cubes.append(self.back)
+        self.id = Chair.currentId
+        Chair.currentId+=1
+        self.name = 'Chair'
 
-
-
-
+    def updateVecs(self):
+        self = Chair(self.length, self.width, self.height, 
+                     origin=self.origin, tableThickness=self.tth, 
+                     legThickness=self.lth)
+        self.id -= 1 
+        Chair.currentId -=1
