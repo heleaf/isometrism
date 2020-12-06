@@ -188,6 +188,8 @@ def appStarted(app):
     #testing out rendering
     app.customRoom = False
 
+    app.helpScreen = True
+
 def setButtonIcon(app, button, iconName): #iconName = str, #button = specific app button 
     ovec = graph2Vecs(app,[button.origin])[0]
     button.setIcon(ovec, iconName)
@@ -263,14 +265,13 @@ def rotateRenderedWalls(app):
     app.COLW.vecs = rotateCube(app, app.COLW.vecs, 10)
 
 def keyPressed(app, event): 
-    if event.key == '1': toggleMakeCubes(app)
+    if event.key == 'h': 
+        app.helpScreen = not app.helpScreen #help screen
+    elif event.key == '1': toggleMakeCubes(app)
     elif event.key == '2': changeAxisAngles(app)
     elif event.key == '4': 
         resetDrawCubeFloor(app)
         resetFurniture(app)
-    elif event.key == 'h': 
-        #help screen
-        pass
     elif event.key == 'r':
         app.showCamera = False
         app.rotationAngle = (app.rotationAngle+10)%360
@@ -313,8 +314,8 @@ def keyPressed(app, event):
     elif event.key == 'a': pass
     elif event.key == 's': pass
     elif event.key == 'd': pass 
-    elif event.key == 'x': 
-        app.viewIndex = (app.viewIndex + 1)%2
+    elif event.key == 'x': #change camera view 
+        app.viewIndex = (app.viewIndex + 1)%len(app.cameraBasisAlts)
         app.cameraBasis = app.cameraBasisAlts[app.viewIndex]
         app.cameraImageCoords = app.cameraImageAlts[app.viewIndex]
 
@@ -696,7 +697,17 @@ def renderCube(app, canvas, cube):
 
 def redrawAll(app, canvas):
 
-    if app.view:
+    if app.helpScreen:
+        canvas.create_text(app.width/2, 30, text='isometrism')
+        canvas.create_text(app.width/2, 60, text='controls:')
+        canvas.create_text(app.width/2, 120, text='v - toggle between edit and view screens')
+        canvas.create_text(app.width/2, 150, text='4 - reset room (click 3x to set room corners)')
+        canvas.create_text(app.width/2, 180, text='r - rotate room')
+        canvas.create_text(app.width/2, 210, text='c - toggle camera and its image plane')
+        canvas.create_text(app.width/2, 240, text='x - change the camera image plane')
+        canvas.create_text(app.width/2, 270, text='click & drag chairs/tables into your room from top left buttons')
+        canvas.create_text(app.width/2, 300, text='h - toggle help screen')
+    elif app.view:
         #here's our view window
         canvas.create_rectangle(0,0,app.width, app.height, fill='pink')
         
