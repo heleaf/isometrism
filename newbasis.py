@@ -18,9 +18,9 @@ def initialize3D(app):
 
 def initializeView(app): #perspective rendering
     app.view = False
-    app.cameraOrigin = np.array([0,30,30]) #change this to be something based on where the room is
+    app.cameraOrigin = np.array([0,30,60]) #change this to be something based on where the room is
     #app.cameraOrigin = np.array([100,0,30])
-    imageDistance = 10
+    imageDistance = 35
     imageLength = 80
     imageHeight = 80
 
@@ -28,6 +28,7 @@ def initializeView(app): #perspective rendering
     #generate the camera based on where the player's room is built
     #imageLength = imageHeight = 100
 
+    #front facing (push forward on x)
     app.imageTopLeft = app.cameraOrigin + np.array([imageDistance, imageLength/2, imageHeight/2])
     app.imageTopRight = app.imageTopLeft + np.array([0,-imageLength, 0])
     app.imageBotLeft = app.imageTopLeft + np.array([0,0,-imageHeight])
@@ -38,6 +39,23 @@ def initializeView(app): #perspective rendering
     a2 = np.array([0,0,imageHeight/app.height])
     a3 = app.imageTopLeft 
     app.cameraBasis = np.array([a1,a2,a3]).T #basis of camera vectors as columns 
+
+    app.cameraBasisAlts = [np.array([a1,a2,a3]).T]
+
+    #left facing (push forward on y)
+    '''
+    imageTopLeft = app.cameraOrigin + np.array([imageLength/2, -imageDistance, imageHeight/2])
+    a1 = np.array([imageLength/app.width, 0,0])
+    a2 = np.array([0,0,imageHeight/app.height])
+    a3 = imageTopLeft
+    '''
+    #app.cameraBasis = np.array([a1,a2,a3]).T 
+    #app.cameraBasisAlts.append(np.array([a1,a2,a3]))
+    #imageTopRight = imageTopLeft + np.array([-imageLength, 0,0])
+    #imageBotLeft = imageTopLeft + np.array([0,0,-imageHeight])
+    #imageBotRight = imageTopLeft + np.array([-imageLength, 0, -imageHeight])
+
+
 
 def resetDrawCubeFloor(app, init=False):
     if init:
@@ -87,6 +105,9 @@ def resetFurniture(app):
 
     app.furniture['Table'] = [[], [], []]
     app.newTable = None
+
+    app.occupiedX = []
+    app.occupiedY = []
 
 def appStarted(app):
     initialize3D(app)
@@ -209,8 +230,11 @@ def keyPressed(app, event):
     elif event.key == '4': 
         resetDrawCubeFloor(app)
         resetFurniture(app)
-    elif event.key == 'h': app.showUnitCube = not app.showUnitCube  #toggle unit cube
+    elif event.key == 'h': 
+        #help screen
+        pass
     elif event.key == 'r':
+        app.showCamera = False
         app.rotationAngle = (app.rotationAngle+10)%360
         #print(app.rotationAngle)
         for cube in app.misc:
@@ -244,7 +268,31 @@ def keyPressed(app, event):
                 cube.vecs = rotateCube(app, cube.vecs, 10)
 
     elif event.key == 'v':   app.view = not app.view  #toggle view
-    elif not app.view and event.key == 'c': app.showCamera = not app.showCamera
+    elif not app.view and app.rotationAngle == 0 and event.key == 'c': app.showCamera = not app.showCamera
+
+    #move camera around 
+    elif event.key == 'w': 
+        app.cameraOrigin += np.array([0,0,5])
+
+        imageDistance = 10
+        imageLength = 80
+        imageHeight = 80
+
+        app.imageTopLeft = app.cameraOrigin + np.array([imageDistance, imageLength/2, imageHeight/2])
+        app.imageTopRight = app.imageTopLeft + np.array([0,-imageLength, 0])
+        app.imageBotLeft = app.imageTopLeft + np.array([0,0,-imageHeight])
+        app.imageBotRight = app.imageTopLeft + np.array([0,-imageLength,-imageHeight])
+
+        a1 = np.array([0,imageLength/app.width,0])
+        a2 = np.array([0,0,imageHeight/app.height])
+        a3 = app.imageTopLeft 
+        app.cameraBasis = np.array([a1,a2,a3]).T #basis of camera vectors as columns
+        
+        pass
+    elif event.key == 'a': pass
+    elif event.key == 's': pass
+    elif event.key == 'd': pass 
+    elif event.key == 'x': pass
 
 def makeCubeFloor(app, event, thickness=10):
     th = np.array([0,0,thickness]) #thickness of the floor, arbitrary for now 
@@ -370,6 +418,8 @@ def makeCubeWalls(app, event):
     app.CORWImageCoords = perspectiveRender(app, app.cameraBasis, app.CORW.vecs)
     app.COLWImageCoords = perspectiveRender(app, app.cameraBasis, app.COLW.vecs)
 
+    #app.CORW.width
+
 def mousePressed(app, event): 
     if app.drawCubeFloor and app.cubeFloorCoords.shape[0]<8 and app.rotationAngle==0:
         makeCubeFloor(app, event)
@@ -473,6 +523,24 @@ def mouseReleased(app, event):
             tth, lth = app.newChair.tth, app.newChair.lth
 
             app.newChair = Chair(l,w,h, origin=(ox,oy,oz), tableThickness=tth, legThickness=lth)
+
+            #make sure there is no overlap (collision detection)
+            for i in range(len(app.occupiedX)):
+                startX = min(app.occupiedX[i])
+                endX = max(app.occupiedX[i])
+                startY = min(app.occupiedY[i])
+                endY = max(app.occupiedY[i])
+                if ((startX < ox < endX or startX < ox+l < endX) and
+                    (startY < oy < endY or startY < oy+w < endY)):
+                    print('no can do')
+                    app.furniture['Chair'][0].pop()
+                    app.newChair = None
+                    app.chairButton.isPressed = False
+                    return 
+
+            #passing collision detection
+            app.occupiedX.append([ox, ox+app.newChair.length])
+            app.occupiedY.append([oy, oy+app.newChair.width])
         
             app.furniture['Chair'][1].append(app.newChair)
             app.furniture['Chair'][0].pop()
@@ -490,6 +558,24 @@ def mouseReleased(app, event):
             tth, lth = app.newTable.tth, app.newTable.lth
 
             app.newTable = Table(l,w,h, origin=(ox,oy,oz), tableThickness=tth, legThickness=lth)
+
+            #make sure there is no overlap (collision detection)
+            for i in range(len(app.occupiedX)):
+                startX = min(app.occupiedX[i])
+                endX = max(app.occupiedX[i])
+                startY = min(app.occupiedY[i])
+                endY = max(app.occupiedY[i])
+                if ((startX < ox < endX or startX < ox+l < endX) and
+                    (startY < oy < endY or startY < oy+w < endY)):
+                    print('no can do')
+                    app.furniture['Table'][0].pop()
+                    app.newTable = None
+                    app.tableButton.isPressed = False
+                    return 
+
+            #passing collision detection
+            app.occupiedX.append([ox, ox+app.newTable.length])
+            app.occupiedY.append([oy, oy+app.newTable.width])
         
             app.furniture['Table'][1].append(app.newTable)
             app.furniture['Table'][0].pop()
@@ -502,29 +588,10 @@ def mouseReleased(app, event):
             app.newTable = None
             app.tableButton.isPressed = False
 
-
     if (app.makeCubes and app.rotationAngle == 0):
-        #and app.drawCubeFloor 
-        #and app.cubeFloorVecs.shape[0]==8 
-        #and app.leftCubeWallVecs.shape[0]==8): 
-        #only allow when the room is aligned as normal ++ add condition
         ox,oy,oz = fitFurnitureInFloor(app, app.newCube, app.fv)
         app.newCube = Cube(30,30,30, (ox,oy,oz))
-        #collision detection ? :(
-        '''
-        for cube in app.misc:
-            if (cube.origin[0] + cube.length > app.newCube.origin[0] > cube.origin[0]):
-                app.tracker+=1
-                print(f'oop {app.tracker}')
-                #app.tempMisc.pop()
-                #return
-            elif (app.newCube.origin[0] + app.newCube.length > cube.origin[0] > app.newCube.origin[0]
-                ):
-                app.tracker+=1
-                print(f'woww {app.tracker}')
-            # or cube.origin[0] + cube.length < app.newCube.origin[0] + app.newCube.length):
-        #this is bugged 
-        '''
+  
         imc = perspectiveRender(app, app.cameraBasis, app.newCube.vecs)
         app.miscImageCoords.append(imc)
         app.misc.append(app.newCube)
