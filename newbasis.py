@@ -24,23 +24,62 @@ def initializeView(app): #perspective rendering
     imageLength = 80
     imageHeight = 80
 
-    #be able to move the camera (then recalculate all imageCoords)
+    #be able to move the camera (then recalculate all imageCoordsFront)
     #generate the camera based on where the player's room is built
     #imageLength = imageHeight = 100
 
     #front facing (push forward on x)
-    app.imageTopLeft = app.cameraOrigin + np.array([imageDistance, imageLength/2, imageHeight/2])
-    app.imageTopRight = app.imageTopLeft + np.array([0,-imageLength, 0])
-    app.imageBotLeft = app.imageTopLeft + np.array([0,0,-imageHeight])
-    app.imageBotRight = app.imageTopLeft + np.array([0,-imageLength,-imageHeight])
-    app.imageCoords = vecs2Graph(app, [app.imageTopLeft, app.imageTopRight, app.imageBotRight, app.imageBotLeft])
+    imageTopLeft = app.cameraOrigin + np.array([imageDistance, imageLength/2, imageHeight/2])
+    imageTopRight = imageTopLeft + np.array([0,-imageLength, 0])
+    imageBotLeft = imageTopLeft + np.array([0,0,-imageHeight])
+    imageBotRight = imageTopLeft + np.array([0,-imageLength,-imageHeight])
+    app.cameraImageCoords = app.imageCoordsFront = vecs2Graph(app, [imageTopLeft, imageTopRight, imageBotRight, imageBotLeft])
 
     a1 = np.array([0,imageLength/app.width,0])
     a2 = np.array([0,0,imageHeight/app.height])
-    a3 = app.imageTopLeft 
+    a3 = imageTopLeft 
     app.cameraBasis = np.array([a1,a2,a3]).T #basis of camera vectors as columns 
 
-    app.cameraBasisAlts = [np.array([a1,a2,a3]).T]
+    #right facing (flipped)
+    b1 = np.array([imageLength/app.width,0,0])
+    b2 = np.array([0,0,imageHeight/app.height])
+    b3 = app.cameraOrigin + np.array([imageLength/2, imageDistance, imageHeight/2])
+
+    #app.cameraBasis = np.array([b1,b2,b3]).T 
+    #gibbirish
+    '''
+    c1 = np.array([imageLength/app.width,0,0])
+    c2 = np.array([0,0,imageHeight/app.height])
+    c3 = app.cameraOrigin + np.array([-imageLength/2, imageDistance, imageHeight/2])
+
+    app.cameraBasis = np.array([c1,c2,c3]).T
+    '''
+
+    #this right facing is better, i think
+    d1 = np.array([-imageLength/app.width,0,0])
+    d2 = np.array([0,0,imageHeight/app.height])
+    d3 = app.cameraOrigin + np.array([-imageLength/2, imageDistance, imageHeight/2])
+    
+
+    imageTopLeft = d3
+    imageTopRight = imageTopLeft + np.array([imageLength,0,0])
+    imageBotLeft = imageTopLeft + np.array([0,0,-imageHeight])
+    imageBotRight = imageTopLeft + np.array([imageLength, 0, -imageHeight])
+    app.imageCoordsRight = vecs2Graph(app, [imageTopLeft, imageTopRight, imageBotRight, imageBotLeft]) 
+    #imageTopLeft = app.cameraOrigin + np.array([imageDistance, imageLength/2, imageHeight/2]
+    #app.cameraBasis = np.array([d1,d2,d3]).T
+
+    e1 = np.array([imageLength/app.width,0,0])
+    e2 = np.array([0,0,imageHeight/app.height])
+    e3 = app.cameraOrigin + np.array([-imageLength/2, -imageDistance, imageHeight/2])
+    #app.cameraBasis = np.array([e1,e2,e3]).T
+
+
+    app.cameraBasisAlts = [np.array([a1,a2,a3]).T, np.array([d1,d2,d3]).T]
+    app.cameraImageAlts = [app.imageCoordsFront, app.imageCoordsRight]
+    app.viewIndex = 0
+
+    #app.cameraBasis = np.array([b1,b2,b3]).T
 
     #left facing (push forward on y)
     '''
@@ -54,8 +93,6 @@ def initializeView(app): #perspective rendering
     #imageTopRight = imageTopLeft + np.array([-imageLength, 0,0])
     #imageBotLeft = imageTopLeft + np.array([0,0,-imageHeight])
     #imageBotRight = imageTopLeft + np.array([-imageLength, 0, -imageHeight])
-
-
 
 def resetDrawCubeFloor(app, init=False):
     if init:
@@ -106,6 +143,7 @@ def resetFurniture(app):
     app.furniture['Table'] = [[], [], []]
     app.newTable = None
 
+    #arrays of (start, end) 1d coordinates that are occupied
     app.occupiedX = []
     app.occupiedY = []
 
@@ -271,28 +309,36 @@ def keyPressed(app, event):
     elif not app.view and app.rotationAngle == 0 and event.key == 'c': app.showCamera = not app.showCamera
 
     #move camera around 
-    elif event.key == 'w': 
-        app.cameraOrigin += np.array([0,0,5])
-
-        imageDistance = 10
-        imageLength = 80
-        imageHeight = 80
-
-        app.imageTopLeft = app.cameraOrigin + np.array([imageDistance, imageLength/2, imageHeight/2])
-        app.imageTopRight = app.imageTopLeft + np.array([0,-imageLength, 0])
-        app.imageBotLeft = app.imageTopLeft + np.array([0,0,-imageHeight])
-        app.imageBotRight = app.imageTopLeft + np.array([0,-imageLength,-imageHeight])
-
-        a1 = np.array([0,imageLength/app.width,0])
-        a2 = np.array([0,0,imageHeight/app.height])
-        a3 = app.imageTopLeft 
-        app.cameraBasis = np.array([a1,a2,a3]).T #basis of camera vectors as columns
-        
-        pass
+    elif event.key == 'w': pass
     elif event.key == 'a': pass
     elif event.key == 's': pass
     elif event.key == 'd': pass 
-    elif event.key == 'x': pass
+    elif event.key == 'x': 
+        app.viewIndex = (app.viewIndex + 1)%2
+        app.cameraBasis = app.cameraBasisAlts[app.viewIndex]
+        app.cameraImageCoords = app.cameraImageAlts[app.viewIndex]
+
+        if app.drawCubeFloor and app.rightCubeWallVecs.shape[0]==8:
+            app.COFloorImageCoords = perspectiveRender(app, app.cameraBasis, app.COFloor.vecs)
+            app.CORWImageCoords = perspectiveRender(app, app.cameraBasis, app.CORW.vecs)
+            app.COLWImageCoords = perspectiveRender(app, app.cameraBasis, app.COLW.vecs)
+
+            for i in range(len(app.furniture['Chair'][1])):
+                chair = app.furniture['Chair'][1][i]
+                chairImageCoords = []
+                for cube in chair.cubes:
+                    coords = perspectiveRender(app, app.cameraBasis, cube.vecs)
+                    chairImageCoords.append(coords)
+                app.furniture['Chair'][2][i] = chairImageCoords
+            
+            
+            for i in range(len(app.furniture['Table'][1])):
+                table = app.furniture['Table'][1][i]
+                tableImageCoords = []
+                for cube in table.cubes:
+                    coords = perspectiveRender(app, app.cameraBasis, cube.vecs)
+                    tableImageCoords.append(coords)
+                app.furniture['Table'][2][i] = tableImageCoords
 
 def makeCubeFloor(app, event, thickness=10):
     th = np.array([0,0,thickness]) #thickness of the floor, arbitrary for now 
@@ -532,7 +578,7 @@ def mouseReleased(app, event):
                 endY = max(app.occupiedY[i])
                 if ((startX < ox < endX or startX < ox+l < endX) and
                     (startY < oy < endY or startY < oy+w < endY)):
-                    print('no can do')
+                    print('nope')
                     app.furniture['Chair'][0].pop()
                     app.newChair = None
                     app.chairButton.isPressed = False
@@ -567,7 +613,7 @@ def mouseReleased(app, event):
                 endY = max(app.occupiedY[i])
                 if ((startX < ox < endX or startX < ox+l < endX) and
                     (startY < oy < endY or startY < oy+w < endY)):
-                    print('no can do')
+                    print('nope')
                     app.furniture['Table'][0].pop()
                     app.newTable = None
                     app.tableButton.isPressed = False
@@ -684,10 +730,11 @@ def redrawAll(app, canvas):
     else:
         if app.showCamera:
             #image face (view window)
-            x0,y0 = app.imageCoords[0]
-            x1,y1 = app.imageCoords[1]
-            x2,y2 = app.imageCoords[2]
-            x3,y3 = app.imageCoords[3]
+            #imageCoord = app.cameraImageAlts
+            x0,y0 = app.cameraImageCoords[0]
+            x1,y1 = app.cameraImageCoords[1]
+            x2,y2 = app.cameraImageCoords[2]
+            x3,y3 = app.cameraImageCoords[3]
             canvas.create_polygon(x0,y0,x1,y1,x2,y2,x3,y3, fill='pink')
 
             camCoord = vecs2Graph(app, [app.cameraOrigin])[0]
