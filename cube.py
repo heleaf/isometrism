@@ -1,5 +1,6 @@
 import numpy as np
 from threedimfunctions import *
+from newbasis import *
 
 class Cube(object):
     refs = set()
@@ -34,6 +35,7 @@ class Cube(object):
         for i in range(self.vecs.shape[0]):
             self.vecs[i] = self.vecs[i]+np.array(self.origin)
 
+        #indexes of vectors for each face 
         self.topFaceVecs = []
         self.leftFrontFaceVecs = []
         self.rightFrontFaceVecs = []
@@ -53,6 +55,13 @@ class Cube(object):
                 self.rightBackFaceVecs.append(i)
             if self.vecs[i][2] == self.origin[2]:
                 self.botFaceVecs.append(i)
+    
+
+    def rotate(self, app):
+        pass
+    
+    def draw(self, app, canvas):
+        pass 
     
     def rotate(self, angle, axis=(0,0,1)):
         if angle%360 != 0:

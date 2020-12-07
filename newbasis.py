@@ -71,8 +71,12 @@ def initializeView(app): #perspective rendering
 
     e1 = np.array([imageLength/app.width,0,0])
     e2 = np.array([0,0,imageHeight/app.height])
-    e3 = app.cameraOrigin + np.array([-imageLength/2, -imageDistance, imageHeight/2])
-    #app.cameraBasis = np.array([e1,e2,e3]).T
+    e3 = app.cameraOrigin + np.array([imageLength/2, imageDistance, imageHeight/2]) 
+
+    #f1 = np.array([0,imageLength/app.width, 0])
+    #f2 = np.array([0,0,])
+    #f3 
+    app.cameraBasis = np.array([e1,e2,e3]).T
 
 
     app.cameraBasisAlts = [np.array([a1,a2,a3]).T, np.array([d1,d2,d3]).T]
@@ -297,6 +301,8 @@ def keyPressed(app, event):
             app.rightCubeWallCoords = vecs2Graph(app, app.rightCubeWallVecs)
             app.leftCubeWallVecs = rotateCube(app, app.leftCubeWallVecs, 10)
             app.leftCubeWallCoords = vecs2Graph(app, app.leftCubeWallVecs)
+            app.CORW.vecs = rotateCube(app, app.CORW.vecs, 10)
+            app.COLW.vecs = rotateCube(app, app.COLW.vecs, 10)
 
         for chair in app.furniture['Chair'][1]:
             for cube in chair.cubes:
@@ -657,6 +663,47 @@ def drawCube(app, canvas, cubeCoords, color='black'):
             p2 = cubeCoords[j]
             canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill=color)
 
+def drawCubeOutline(app, canvas, cube, color='black'):
+    topFaceVecs = []
+    for i in cube.topFaceVecs:
+        topFaceVecs.append(cube.vecs[i])
+    
+    leftFrontFaceVecs = []
+    for i in cube.leftFrontFaceVecs:
+        leftFrontFaceVecs.append(cube.vecs[i])
+    
+    rightFrontFaceVecs = []
+    for i in cube.rightFrontFaceVecs:
+        rightFrontFaceVecs.append(cube.vecs[i])
+
+    leftBackFaceVecs = []
+    for i in cube.leftBackFaceVecs:
+        leftBackFaceVecs.append(cube.vecs[i])
+    
+    rightBackFaceVecs = []
+    for i in cube.rightBackFaceVecs:
+        rightBackFaceVecs.append(cube.vecs[i])
+
+    botFaceVecs = []
+    for i in cube.botFaceVecs:
+        botFaceVecs.append(cube.vecs[i])
+
+    t = topFaceCoords = vecs2Graph(app, topFaceVecs)
+    lf = leftFrontFaceCoords = vecs2Graph(app, leftFrontFaceVecs)
+    rf = rightFrontFaceCoords = vecs2Graph(app, rightFrontFaceVecs)
+    lb = leftBackFaceCoords = vecs2Graph(app, leftBackFaceVecs)
+    rb = rightBackFaceCoords = vecs2Graph(app, rightBackFaceVecs)
+    b = botFaceCoords = vecs2Graph(app, botFaceVecs)
+
+    for r in [t,lf,rf,lb,rb,b]:
+        canvas.create_line(r[0][0], r[0][1], r[1][0], r[1][1], fill=color)
+        canvas.create_line(r[1][0],r[1][1], r[3][0], r[3][1], fill=color)
+        canvas.create_line(r[3][0], r[3][1], r[2][0], r[2][1], fill=color)
+        canvas.create_line(r[2][0],r[2][1], r[0][0], r[0][1], fill=color)
+        #canvas.create_polygon(r[0][0], r[0][1], r[1][0], r[1][1], r[3][0], r[3][1], r[2][0], r[2][1], fill=None, outline=color)
+
+    #canvas.create_polygon(t[0][0], t[0][1], t[1][0], t[1][1], t[3][0], t[3][1], t[2][0], t[2][1],fill=None)
+
 def renderCube(app, canvas, cube):
     topFaceVecs = []
     for i in cube.topFaceVecs:
@@ -678,11 +725,16 @@ def renderCube(app, canvas, cube):
     for i in cube.rightBackFaceVecs:
         rightBackFaceVecs.append(cube.vecs[i])
 
+    botFaceVecs = []
+    for i in cube.botFaceVecs:
+        botFaceVecs.append(cube.vecs[i])
+
     t = topFaceCoords = vecs2Graph(app, topFaceVecs)
     lf = leftFrontFaceCoords = vecs2Graph(app, leftFrontFaceVecs)
     rf = rightFrontFaceCoords = vecs2Graph(app, rightFrontFaceVecs)
     lb = leftBackFaceCoords = vecs2Graph(app, leftBackFaceVecs)
     rb = rightBackFaceCoords = vecs2Graph(app, rightBackFaceVecs)
+    b = botFaceCoords = vecs2Graph(app, botFaceVecs)
 
     #print(rightBackFaceVecs)
     
@@ -803,8 +855,10 @@ def redrawAll(app, canvas):
 
         #walls (static)
         if app.drawCubeFloor and app.cubeFloorVecs.shape[0]==8 and app.rightCubeWallCoords.shape[0]==8:
-            drawCube(app, canvas, app.rightCubeWallCoords, 'red')
-            drawCube(app, canvas, app.leftCubeWallCoords, 'red')
+            #drawCube(app, canvas, app.rightCubeWallCoords, 'red')
+            drawCubeOutline(app, canvas, app.CORW, 'black')
+            drawCubeOutline(app, canvas, app.COLW, 'black')
+            #drawCube(app, canvas, app.leftCubeWallCoords, 'red')
             
             #renderCube(app, canvas, app.COLW)
             #renderCube(app, canvas, app.CORW)
@@ -817,7 +871,8 @@ def redrawAll(app, canvas):
 
         #cube floor (static)
         if app.drawCubeFloor and app.cubeFloorVecs.shape[0]==8:
-            drawCube(app, canvas, app.cubeFloorCoords, 'red')
+            #drawCube(app, canvas, app.cubeFloorCoords, 'red')
+            drawCubeOutline(app, canvas, app.COFloor, 'black')
             #renderCube(app, canvas, app.COFloor)
         #cube floor (moving)
         if app.drawCubeFloor and app.cubeFloorVecs.shape[0]==2:
@@ -826,23 +881,25 @@ def redrawAll(app, canvas):
         #draw furniture
         if app.newChair!=None:
             for cube in app.newChair.cubes:
-                coords = vecs2Graph(app, cube.vecs)
-                drawCube(app, canvas, coords, color='red')
+                drawCubeOutline(app, canvas, cube, 'red')
+                #coords = vecs2Graph(app, cube.vecs)
+                #drawCube(app, canvas, coords, color='red')
         for chair in app.furniture['Chair'][1]:
             for cube in chair.cubes:
-                coords = vecs2Graph(app, cube.vecs)
-                drawCube(app, canvas, coords, color='orange') 
+                drawCubeOutline(app, canvas, cube, 'black')
+                #coords = vecs2Graph(app, cube.vecs)
+                #drawCube(app, canvas, coords, color='orange') 
 
         if app.newTable!=None:
             for cube in app.newTable.cubes:
-                coords = vecs2Graph(app, cube.vecs)
-                drawCube(app, canvas, coords, color='red')
+                drawCubeOutline(app, canvas, cube, 'red')
+                #coords = vecs2Graph(app, cube.vecs)
+                #drawCube(app, canvas, coords, color='red')
         for table in app.furniture['Table'][1]:
             for cube in table.cubes:
-                coords = vecs2Graph(app, cube.vecs)
-                drawCube(app, canvas, coords, color='orange')  
+                drawCubeOutline(app, canvas, cube, 'black')
+                #coords = vecs2Graph(app, cube.vecs)
+                #drawCube(app, canvas, coords, color='orange')  
 
 def main():
     runApp(width=600, height=600)
-
-main()
