@@ -57,54 +57,80 @@ class Cube(object):
                 self.botFaceVecs.append(i)
     
 
-    def rotate(self, app):
-        pass
+    def rotate(self, app, angle, rotAxis=(0,0,1)):
+
+        #def rotateCube(app, cube, angle, rotAxis=(0,0,1)): 
+        #rotates all the vectors in a cube around an axis
+        newCubeVecs = np.empty((0,3))
+
+        for i in range(self.vecs.shape[0]):
+            vec = self.vecs[i]
+            if vec[0]==vec[1]==vec[2]==0:
+                rotatedVec = vec
+            else:
+                rotatedVec = rotateVec(app, vec, 10, rotAxis)
+            #self.vecs[i] = rotatedVec
+            newCubeVecs = np.append(newCubeVecs, [rotatedVec], axis=0)
+        self.vecs = newCubeVecs
+        self.origin = newCubeVecs[0]
+        #self.origin = 
+
+        #for vec in self.vecs:
+        #    if vec[0]==vec[1]==vec[2]==0:
+        #        rotatedVec = vec
+        #    else:
+        #        rotatedVec = rotateVec(app, vec, 10, rotAxis)
+        #       s
+        #newCubeVecs = np.append(newCubeVecs, [rotatedVec], axis=0)
+
+       # self.vecs = newCubeVecs
+        #self.origin = newCubeVecs[0]
+        
+        #return newCubeVecs
+
+        #pass
     
-    def draw(self, app, canvas):
+    def draw(self, app, canvas, color='black'):
+
+        topFaceVecs = []
+        for i in self.topFaceVecs:
+            topFaceVecs.append(self.vecs[i])
+        
+        leftFrontFaceVecs = []
+        for i in self.leftFrontFaceVecs:
+            leftFrontFaceVecs.append(self.vecs[i])
+        
+        rightFrontFaceVecs = []
+        for i in self.rightFrontFaceVecs:
+            rightFrontFaceVecs.append(self.vecs[i])
+
+        leftBackFaceVecs = []
+        for i in self.leftBackFaceVecs:
+            leftBackFaceVecs.append(self.vecs[i])
+        
+        rightBackFaceVecs = []
+        for i in self.rightBackFaceVecs:
+            rightBackFaceVecs.append(self.vecs[i])
+
+        botFaceVecs = []
+        for i in self.botFaceVecs:
+            botFaceVecs.append(self.vecs[i])
+
+        t = topFaceCoords = vecs2Graph(app, topFaceVecs)
+        lf = leftFrontFaceCoords = vecs2Graph(app, leftFrontFaceVecs)
+        rf = rightFrontFaceCoords = vecs2Graph(app, rightFrontFaceVecs)
+        lb = leftBackFaceCoords = vecs2Graph(app, leftBackFaceVecs)
+        rb = rightBackFaceCoords = vecs2Graph(app, rightBackFaceVecs)
+        b = botFaceCoords = vecs2Graph(app, botFaceVecs)
+
+        for r in [t,lf,rf,lb,rb,b]:
+            canvas.create_line(r[0][0], r[0][1], r[1][0], r[1][1], fill=color)
+            canvas.create_line(r[1][0],r[1][1], r[3][0], r[3][1], fill=color)
+            canvas.create_line(r[3][0], r[3][1], r[2][0], r[2][1], fill=color)
+            canvas.create_line(r[2][0],r[2][1], r[0][0], r[0][1], fill=color)
+
+        #canvas.create_rectangle(app.width/4, app.height/4, 3*app.width/4, 3*app.height/4)
         pass 
-    
-    def rotate(self, angle, axis=(0,0,1)):
-        if angle%360 != 0:
-            a = deg2Rad(angle)
-
-            #x,y,z = vec[0], vec[1], vec[2]
-            #x,y,z = 0,0,1 rotate around z axis
-
-            x,y,z = axis 
-
-            #rotation matrix formula from 
-            #https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/rotate3d()
-
-            #first row
-            r11 = 1 + (1-math.cos(a))*(x**2 - 1)
-            r12 = z*math.sin(a) + x*y*(1-math.cos(a))
-            r13 = -y*math.sin(a) + x*z*(1-math.cos(a))
-    
-            #second row 
-            r21 = -z*math.sin(a) + x*y*(1-math.cos(a))
-            r22 = 1 + (1-math.cos(a))*(y**2 - 1)
-            r23 = x*math.sin(a) + y*z*(1-math.cos(a))
-
-            #third row 
-            r31 = y*math.sin(a) + x*z*(1-math.cos(a))
-            r32 = -x*math.sin(a) + y*z*(1-math.cos(a))
-            r33 = 1 + (1-math.cos(a))*(z**2 - 1)
-
-            #rotation matrix 
-            R = np.array([[r11, r12, r13], 
-                  [r21, r22, r23],
-                  [r31, r32, r33]])
-
-            #rotatedVec = R @ vec
-            for i in range(self.vecs.shape[0]):
-                self.vecs[i] = R @ self.vecs[i]
-
-    def isCollide(self, other):
-        if isinstance(other, Cube):
-            print(self.vecs)
-            print(other.vecs)
-            pass
-        return None
 
     def __hash__(self):
         return hash(self.name, self.id)
@@ -112,7 +138,7 @@ class Cube(object):
     def __repr__(self):
         return f'{self.name}: {self.id}'
 
-class Table(Cube):
+class Table(object):
     tableThickness = 5
     legThickness = 3
     refs = set()
@@ -151,6 +177,14 @@ class Table(Cube):
                      legThickness=self.lth)
         self.id -= 1 
         Table.currentId -=1
+
+    def draw(self, app, canvas, color='black'):
+        for cube in self.cubes:
+            cube.draw(app, canvas, color)
+
+    def rotate(self, app, angle, rotAxis=(0,0,1)):
+        for i in range(len(self.cubes)):
+            self.cubes[i].rotate(app, angle, rotAxis)
 
 class Chair(Table):
     refs = set()

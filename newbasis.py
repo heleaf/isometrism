@@ -138,14 +138,9 @@ def resetDrawCubeFloor(app, init=False):
 
 def resetFurniture(app):
     app.furniture = dict()
-    #first arr = floating furniture
-    #second arr = stationary furniture 
-    #third arr = rendered arrays of cube coordinates
-    app.furniture['Chair'] = [[], [], []]
-    app.newChair = None
-
-    app.furniture['Table'] = [[], [], []]
-    app.newTable = None
+    app.furniture['standard'] = []
+    app.furniture['image'] = []
+    app.newFurniture = None
 
     #arrays of (start, end) 1d coordinates that are occupied
     app.occupiedX = []
@@ -155,29 +150,9 @@ def appStarted(app):
     initialize3D(app)
     resetDrawCubeFloor(app, init=True)
 
-    #cut out later
-    app.fv = Cube(200,200,10, (50,50,0))
-    app.rw = Cube(10,200,200, (40,50,0))
-    app.lw = Cube(200,10,200, (50,40,0))
-    app.test = [app.fv, app.rw, app.lw]
-    
-    app.classCube = Cube(50,100,150, (100,100,0))
-    app.misc = []
-    app.tempMisc = []
-
-    app.makeCubes = False
-    app.tracker = 0
-    #expand makeCubes to makeFurniture
-
     #### perspective rendering 
     initializeView(app) 
     app.showCamera = True
-
-    app.lwImageCoords = perspectiveRender(app, app.cameraBasis, app.lw.vecs)
-    app.floorImageCoords = perspectiveRender(app, app.cameraBasis, app.fv.vecs)
-    app.ccImageCoords = perspectiveRender(app, app.cameraBasis, app.classCube.vecs)
-    app.rwImageCoords = perspectiveRender(app, app.cameraBasis, app.rw.vecs)
-    app.miscImageCoords = []
 
     #########
     resetFurniture(app)
@@ -191,8 +166,9 @@ def appStarted(app):
     
     #testing out rendering
     app.customRoom = False
-
     app.helpScreen = True
+
+    app.cubeTest = Cube(30,30,30,(100,100,0))
 
 def setButtonIcon(app, button, iconName): #iconName = str, #button = specific app button 
     ovec = graph2Vecs(app,[button.origin])[0]
@@ -231,11 +207,7 @@ def rotateCube(app, cube, angle, rotAxis=(0,0,1)):
         newCube = np.append(newCube, [rotatedVec], axis=0)
     return newCube
 
-def toggleMakeCubes(app):
-    app.makeCubes = not app.makeCubes 
-    app.misc = [] 
-    app.tracker = 0
-    app.miscImageCoords = []
+'''
 def changeAxisAngles(app):
     #try shifting origin? 
     #app.origin = (app.origin[0]+20, app.origin[1]+20)
@@ -246,6 +218,7 @@ def changeAxisAngles(app):
     app.yAxisAngle = deg2Rad(app.yAxisInitAngle+app.rotationAngle)
 def changeOrigin(app): pass
     #move the center of the room to the origin point 
+'''
 
 def rotateRenderedWalls(app):
     app.CORW.vecs = rotateCube(app, app.CORW.vecs, 10)
@@ -276,41 +249,26 @@ def keyPressed(app, event):
     elif event.key == '4': 
         resetDrawCubeFloor(app)
         resetFurniture(app)
-    elif event.key == 'r':
+    elif event.key == 'r' and not app.view:
+        app.cubeTest.rotate(app, 10)
+
         app.showCamera = False
         app.rotationAngle = (app.rotationAngle+10)%360
-        #print(app.rotationAngle)
-        for cube in app.misc:
-            cube.vecs = rotateCube(app, cube.vecs, 10)
-            cube.origin = cube.vecs[0]
-        for cube in [app.fv, app.lw, app.rw]:
-            cube.vecs = rotateCube(app, cube.vecs, 10)
-            cube.origin = cube.vecs[0]
-        #for i in range(len(app.table.cubes)):
-        #    app.table.cubes[i].vecs = rotateCube(app, app.table.cubes[i].vecs, 10)
-        #    app.table.cubes[i].origin = app.table.cubes[i].vecs[0]
-        #for i in range(len(app.chair.cubes)):
-        #    app.chair.cubes[i].vecs = rotateCube(app, app.chair.cubes[i].vecs, 10)
-        #    app.chair.cubes[i].origin = app.chair.cubes[i].vecs[0]
+        
         if app.cubeFloorVecs.shape[0]==8:
             app.cubeFloorVecs = rotateCube(app, app.cubeFloorVecs, 10)
             app.cubeFloorCoords = vecs2Graph(app, app.cubeFloorVecs)
-            app.COFloor.vecs = rotateCube(app, app.COFloor.vecs, 10)
+            app.COFloor.rotate(app, 10)
         if app.rightCubeWallCoords.shape[0]==8:
             app.rightCubeWallVecs = rotateCube(app, app.rightCubeWallVecs, 10)
             app.rightCubeWallCoords = vecs2Graph(app, app.rightCubeWallVecs)
             app.leftCubeWallVecs = rotateCube(app, app.leftCubeWallVecs, 10)
             app.leftCubeWallCoords = vecs2Graph(app, app.leftCubeWallVecs)
-            app.CORW.vecs = rotateCube(app, app.CORW.vecs, 10)
-            app.COLW.vecs = rotateCube(app, app.COLW.vecs, 10)
+            app.CORW.rotate(app, 10)
+            app.COLW.rotate(app, 10)
 
-        for chair in app.furniture['Chair'][1]:
-            for cube in chair.cubes:
-                cube.vecs = rotateCube(app, cube.vecs, 10)
-
-        for table in app.furniture['Table'][1]:
-            for cube in table.cubes:
-                cube.vecs = rotateCube(app, cube.vecs, 10)
+        for furniture in app.furniture['standard']:
+            furniture.rotate(app, 10)
 
     elif event.key == 'v':   app.view = not app.view  #toggle view
     elif not app.view and app.rotationAngle == 0 and event.key == 'c': app.showCamera = not app.showCamera
@@ -330,22 +288,13 @@ def keyPressed(app, event):
             app.CORWImageCoords = perspectiveRender(app, app.cameraBasis, app.CORW.vecs)
             app.COLWImageCoords = perspectiveRender(app, app.cameraBasis, app.COLW.vecs)
 
-            for i in range(len(app.furniture['Chair'][1])):
-                chair = app.furniture['Chair'][1][i]
-                chairImageCoords = []
-                for cube in chair.cubes:
+            for i in range(len(app.furniture['standard'])):
+                furniture = app.furniture['standard'][i]
+                furnitureImageCoords = []
+                for cube in furniture.cubes:
                     coords = perspectiveRender(app, app.cameraBasis, cube.vecs)
-                    chairImageCoords.append(coords)
-                app.furniture['Chair'][2][i] = chairImageCoords
-            
-            
-            for i in range(len(app.furniture['Table'][1])):
-                table = app.furniture['Table'][1][i]
-                tableImageCoords = []
-                for cube in table.cubes:
-                    coords = perspectiveRender(app, app.cameraBasis, cube.vecs)
-                    tableImageCoords.append(coords)
-                app.furniture['Table'][2][i] = tableImageCoords
+                    furnitureImageCoords.append(coords)
+                app.furniture['image'][i] = furnitureImageCoords
 
 def makeCubeFloor(app, event, thickness=10):
     th = np.array([0,0,thickness]) #thickness of the floor, arbitrary for now 
@@ -479,11 +428,6 @@ def mousePressed(app, event):
     elif app.cubeFloorCoords.shape[0]==8 and app.cubeWallHeight==None:
         makeCubeWalls(app, event)
 
-    if app.makeCubes and app.rotationAngle==0:
-        origin = graph2Vecs(app, [[event.x, event.y]], z=app.fv.height)[0]
-        app.newCube = Cube(30, 30, 30, origin)
-        app.tempMisc.append(app.newCube)
-
     if not app.view and app.drawCubeFloor and app.rightCubeWallVecs.shape[0]==8 and app.rotationAngle==0:
         chox, choy = app.chairButton.origin
         chw, chh = app.chairButton.w, app.chairButton.h
@@ -491,24 +435,22 @@ def mousePressed(app, event):
         tx, ty = app.tableButton.origin
         tw, th = app.tableButton.w, app.tableButton.h
 
-        origin = graph2Vecs(app, [[event.x, event.y]], z=app.fv.height)[0]
+        origin = graph2Vecs(app, [[event.x, event.y]], z=app.COFloor.height)[0]
+
         if chox-chw/2<=event.x<=chox+chw/2 and choy-chh/2 <= event.y <=choy+chh/2:
             app.chairButton.isPressed = True
             length = width = min(app.COFloor.length/8, app.COFloor.width/8)
             height = length*2.5
-            app.newChair = Chair(length, width, height, origin=origin, legThickness=min(2,length*0.2))
-            app.furniture['Chair'][0].append(app.newChair)#
+            app.newFurniture = Chair(length, width, height, origin=origin, legThickness=min(2,length*0.2))
             print('add chair!')
-            print(app.furniture)
         elif tx-tw/2<=event.x<=tx+tw/2 and ty-th/2<=event.y<=ty+th/2:
             app.tableButton.isPressed = True
             length = app.COFloor.length/6
             width = length*2
             height = length*1.5
-            app.newTable = Table(length, width, height, origin=origin, legThickness=min(2,length*0.2))
-            app.furniture['Table'][0].append(app.newTable)
+            app.newFurniture = Table(length, width, height, origin=origin, legThickness=min(2,length*0.2))
             print('add table!')
-            print(app.furniture)
+            #print(app.oldFurniture)
 
     #for debugging, print the vector
     c = np.array([[event.x, event.y]])
@@ -516,31 +458,21 @@ def mousePressed(app, event):
     print(v)
 
 def mouseDragged(app, event):
-    if app.makeCubes and app.rotationAngle==0:
-        origin = graph2Vecs(app, [[event.x, event.y]], z=app.fv.height)[0]
-        app.newCube = Cube(30, 30, 30, origin) #<-- make this furniture in general
-        #app.tempMisc.append(app.newCube)
-        if app.tempMisc != []:
-            app.tempMisc[-1] = app.newCube
     if (not app.view and app.drawCubeFloor and app.rightCubeWallVecs.shape[0]==8 
-        and app.rotationAngle==0):
-        o = graph2Vecs(app, [[event.x, event.y]], z=app.fv.height)[0]
+        and app.rotationAngle==0 and app.newFurniture!=None):
+        o = graph2Vecs(app, [[event.x, event.y]], z=app.COFloor.height)[0]
+
+        length2 = app.newFurniture.length
+        width2 = app.newFurniture.width
+        height2 = app.newFurniture.height
+        tth2 = app.newFurniture.tth
+        lth2 = app.newFurniture.lth
+
         if app.chairButton.isPressed:
-            length = app.newChair.length
-            width = app.newChair.width 
-            height = app.newChair.height
-            tth = app.newChair.tth
-            lth = app.newChair.lth
-            app.newChair = Chair(length, width, height, origin=o, tableThickness=tth, legThickness=lth)
-            app.furniture['Chair'][0][-1] = app.newChair
+            app.newFurniture = Chair(length2, width2, height2, origin=o, tableThickness=tth2, legThickness=lth2)
+
         elif app.tableButton.isPressed:
-            length = app.newTable.length
-            width = app.newTable.width
-            height = app.newTable.height 
-            tth = app.newTable.tth
-            lth = app.newTable.lth
-            app.newTable = Table(length, width, height, origin=o, tableThickness=tth, legThickness=lth) 
-            app.furniture['Table'][0][-1] = app.newTable
+            app.newFurniture = Table(length2, width2, height2, origin=o, tableThickness=tth2, legThickness=lth2)
 
 def fitFurnitureInFloor(app, furniture, floor):
     #correcting x component
@@ -567,88 +499,43 @@ def fitFurnitureInFloor(app, furniture, floor):
 def mouseReleased(app, event):
 
     if (not app.view and app.drawCubeFloor and app.rightCubeWallVecs.shape[0]==8 
-        and app.rotationAngle == 0):
+        and app.rotationAngle == 0 and (app.chairButton.isPressed or app.tableButton.isPressed)):
+        ox2, oy2, oz2 = fitFurnitureInFloor(app, app.newFurniture, app.COFloor)
+        l2, w2, h2 = app.newFurniture.length, app.newFurniture.width, app.newFurniture.height
+        tth2, lth2 = app.newFurniture.tth, app.newFurniture.lth
+
         if app.chairButton.isPressed:
-            #constrain to room boundaries 
-            ox,oy,oz = fitFurnitureInFloor(app, app.newChair, app.COFloor)
-
-            l,w,h = app.newChair.length, app.newChair.width, app.newChair.height
-            tth, lth = app.newChair.tth, app.newChair.lth
-
-            app.newChair = Chair(l,w,h, origin=(ox,oy,oz), tableThickness=tth, legThickness=lth)
-
-            #make sure there is no overlap (collision detection)
-            for i in range(len(app.occupiedX)):
-                startX = min(app.occupiedX[i])
-                endX = max(app.occupiedX[i])
-                startY = min(app.occupiedY[i])
-                endY = max(app.occupiedY[i])
-                if ((startX < ox < endX or startX < ox+l < endX) and
-                    (startY < oy < endY or startY < oy+w < endY)):
-                    print('nope')
-                    app.furniture['Chair'][0].pop()
-                    app.newChair = None
-                    app.chairButton.isPressed = False
-                    return 
-
-            #passing collision detection
-            app.occupiedX.append([ox, ox+app.newChair.length])
-            app.occupiedY.append([oy, oy+app.newChair.width])
-        
-            app.furniture['Chair'][1].append(app.newChair)
-            app.furniture['Chair'][0].pop()
-            chairImageCoords = []
-            for cube in app.newChair.cubes:
-                coords = perspectiveRender(app, app.cameraBasis, cube.vecs)
-                chairImageCoords.append(coords)
-            app.furniture['Chair'][2].append(chairImageCoords)
-            app.newChair = None
-            app.chairButton.isPressed = False
-
+            app.newFurniture = Chair(l2,w2,h2, origin=(ox2,oy2,oz2), tableThickness=tth2, legThickness=lth2)
         elif app.tableButton.isPressed: 
-            ox,oy,oz = fitFurnitureInFloor(app, app.newTable, app.COFloor)
-            l,w,h = app.newTable.length, app.newTable.width, app.newTable.height
-            tth, lth = app.newTable.tth, app.newTable.lth
-
-            app.newTable = Table(l,w,h, origin=(ox,oy,oz), tableThickness=tth, legThickness=lth)
-
-            #make sure there is no overlap (collision detection)
-            for i in range(len(app.occupiedX)):
-                startX = min(app.occupiedX[i])
-                endX = max(app.occupiedX[i])
-                startY = min(app.occupiedY[i])
-                endY = max(app.occupiedY[i])
-                if ((startX < ox < endX or startX < ox+l < endX) and
-                    (startY < oy < endY or startY < oy+w < endY)):
-                    print('nope')
-                    app.furniture['Table'][0].pop()
-                    app.newTable = None
-                    app.tableButton.isPressed = False
-                    return 
-
-            #passing collision detection
-            app.occupiedX.append([ox, ox+app.newTable.length])
-            app.occupiedY.append([oy, oy+app.newTable.width])
+            app.newFurniture = Table(l2,w2,h2, origin=(ox2,oy2,oz2), tableThickness=tth2, legThickness=lth2)
         
-            app.furniture['Table'][1].append(app.newTable)
-            app.furniture['Table'][0].pop()
-            tableImageCoords = []
-            for cube in app.newTable.cubes:
-                coords = perspectiveRender(app, app.cameraBasis, cube.vecs)
-                tableImageCoords.append(coords)
-            app.furniture['Table'][2].append(tableImageCoords)
+        for i in range(len(app.occupiedX)):
+            startX = min(app.occupiedX[i])
+            endX = max(app.occupiedX[i])
+            startY = min(app.occupiedY[i])
+            endY = max(app.occupiedY[i])
+            if ((startX < ox2 < endX or startX < ox2+l2 < endX) and
+                (startY < oy2 < endY or startY < oy2+w2 < endY)):
+                print('nope')
+                app.furniture['standard'].pop()
+                app.newFurniture = None
+                app.chairButton.isPressed = False
+                app.tableButton.isPressed = False
+                return 
 
-            app.newTable = None
-            app.tableButton.isPressed = False
-
-    if (app.makeCubes and app.rotationAngle == 0):
-        ox,oy,oz = fitFurnitureInFloor(app, app.newCube, app.fv)
-        app.newCube = Cube(30,30,30, (ox,oy,oz))
-  
-        imc = perspectiveRender(app, app.cameraBasis, app.newCube.vecs)
-        app.miscImageCoords.append(imc)
-        app.misc.append(app.newCube)
-        app.tempMisc.pop()
+        #passing collision detection
+        app.occupiedX.append([ox2, ox2+app.newFurniture.length])
+        app.occupiedY.append([oy2, oy2+app.newFurniture.width])
+    
+        app.furniture['standard'].append(app.newFurniture)
+        furnitureImageCoords = []
+        for cube in app.newFurniture.cubes:
+            coords = perspectiveRender(app, app.cameraBasis, cube.vecs)
+            furnitureImageCoords.append(coords)
+        app.furniture['image'].append(furnitureImageCoords)
+        app.newFurniture = None
+        app.tableButton.isPressed = False
+        app.chairButton.isPressed = False
 
 def mouseMoved(app, event): 
     if app.drawCubeFloor and app.cubeFloorVecs.shape[0]==2:
@@ -749,6 +636,13 @@ def renderCube(app, canvas, cube):
 
 def redrawAll(app, canvas):
 
+    #app.cubeTest.draw(app, canvas)
+    #app.chairTest.draw(app, canvas)
+    #app.tableTest.draw(app, canvas)
+
+    #for f in app.t:
+    #    f.draw(app, canvas)
+
     if app.helpScreen:
         canvas.create_text(app.width/2, 30, text='isometrism')
         canvas.create_text(app.width/2, 60, text='controls:')
@@ -765,18 +659,27 @@ def redrawAll(app, canvas):
         
         if (isinstance(app.COFloorImageCoords, np.ndarray) 
             and app.COFloorImageCoords.all() != None):
-
-            for furniture in app.furniture['Chair'][2]:
+            '''
+            for furniture in app.oldFurniture['Chair'][2]:
                 for cubeCoords in furniture:
                     drawCube(app, canvas, cubeCoords, color = 'orange')
 
-            for furniture in app.furniture['Table'][2]:
+            for furniture in app.oldFurniture['Table'][2]:
                 for cubeCoords in furniture:
                     drawCube(app, canvas, cubeCoords, color = 'orange')
 
             drawCube(app, canvas, app.COFloorImageCoords, color = 'red')
             drawCube(app, canvas, app.CORWImageCoords, color = 'red')
             drawCube(app, canvas, app.COLWImageCoords, color = 'red')
+            '''
+
+            for furniture in app.furniture['image']:
+                for cubeCoords in furniture:
+                    drawCube(app, canvas, cubeCoords, color = 'orange')
+
+            drawCube(app, canvas, app.COFloorImageCoords, color = 'red')
+            drawCube(app, canvas, app.CORWImageCoords, color = 'red')
+            drawCube(app, canvas, app.COLWImageCoords, color = 'red') 
 
             
         '''
@@ -786,9 +689,11 @@ def redrawAll(app, canvas):
         drawCube(app, canvas, app.floorImageCoords, color = 'purple')
         drawCube(app, canvas, app.rwImageCoords, color = 'purple')
         '''
+        '''
         #not working :(
         for imc in app.miscImageCoords: #wait yo this is working dawg
             drawCube(app, canvas, imc)
+        '''
     
     else:
         if app.showCamera:
@@ -810,15 +715,17 @@ def redrawAll(app, canvas):
         chw, chh = app.chairButton.w, app.chairButton.h
         chc = app.chairButton.color
         canvas.create_rectangle(chox-chw/2, choy-chh/2, chox+chw/2, choy+chh/2, fill=chc)
-        for coords in app.chairButton.iconCoords:
-            drawCube(app, canvas, coords)
+        app.chairButton.icon.draw(app, canvas, 'black')
+        #for coords in app.chairButton.iconCoords:
+        #    drawCube(app, canvas, coords)
 
         tox, toy = app.tableButton.origin
         tw, th = app.tableButton.w, app.tableButton.h
         tc = app.tableButton.color
         canvas.create_rectangle(tox-tw/2, toy-th/2, tox+tw/2, toy+th/2, fill=tc)
-        for coords in app.tableButton.iconCoords:
-            drawCube(app, canvas, coords) 
+        app.tableButton.icon.draw(app, canvas, 'black')
+        #for coords in app.tableButton.iconCoords:
+        #    drawCube(app, canvas, coords) 
 
 
         #draw table
@@ -837,6 +744,7 @@ def redrawAll(app, canvas):
             c = vecs2Graph(app, c.vecs)
             drawCube(app, canvas, c, 'purple')
         '''
+        '''
         #cubes? 
         for cube in app.misc:
             c = vecs2Graph(app, cube.vecs)
@@ -847,6 +755,7 @@ def redrawAll(app, canvas):
             c = vecs2Graph(app, cube.vecs)
             drawCube(app, canvas, c, 'red')
         '''
+        '''
         #classcube
         coords = vecs2Graph(app, app.classCube.vecs)
         drawCube(app, canvas, coords, color = 'orange')
@@ -856,8 +765,10 @@ def redrawAll(app, canvas):
         #walls (static)
         if app.drawCubeFloor and app.cubeFloorVecs.shape[0]==8 and app.rightCubeWallCoords.shape[0]==8:
             #drawCube(app, canvas, app.rightCubeWallCoords, 'red')
-            drawCubeOutline(app, canvas, app.CORW, 'black')
-            drawCubeOutline(app, canvas, app.COLW, 'black')
+            #drawCubeOutline(app, canvas, app.CORW, 'black')
+            #drawCubeOutline(app, canvas, app.COLW, 'black')
+            app.CORW.draw(app, canvas, 'black')
+            app.COLW.draw(app, canvas, 'black')
             #drawCube(app, canvas, app.leftCubeWallCoords, 'red')
             
             #renderCube(app, canvas, app.COLW)
@@ -872,19 +783,26 @@ def redrawAll(app, canvas):
         #cube floor (static)
         if app.drawCubeFloor and app.cubeFloorVecs.shape[0]==8:
             #drawCube(app, canvas, app.cubeFloorCoords, 'red')
-            drawCubeOutline(app, canvas, app.COFloor, 'black')
+            #drawCubeOutline(app, canvas, app.COFloor, 'black')
+
+            app.COFloor.draw(app, canvas, 'black')
             #renderCube(app, canvas, app.COFloor)
         #cube floor (moving)
         if app.drawCubeFloor and app.cubeFloorVecs.shape[0]==2:
             drawCube(app, canvas, app.tempCubeFloorCoords, 'red')
 
         #draw furniture
+        if app.newFurniture!=None:
+            app.newFurniture.draw(app, canvas, 'red')
+        for furniture in app.furniture['standard']:
+            furniture.draw(app, canvas, 'black')
+        '''
         if app.newChair!=None:
             for cube in app.newChair.cubes:
                 drawCubeOutline(app, canvas, cube, 'red')
                 #coords = vecs2Graph(app, cube.vecs)
                 #drawCube(app, canvas, coords, color='red')
-        for chair in app.furniture['Chair'][1]:
+        for chair in app.oldFurniture['Chair'][1]:
             for cube in chair.cubes:
                 drawCubeOutline(app, canvas, cube, 'black')
                 #coords = vecs2Graph(app, cube.vecs)
@@ -895,11 +813,11 @@ def redrawAll(app, canvas):
                 drawCubeOutline(app, canvas, cube, 'red')
                 #coords = vecs2Graph(app, cube.vecs)
                 #drawCube(app, canvas, coords, color='red')
-        for table in app.furniture['Table'][1]:
+        for table in app.oldFurniture['Table'][1]:
             for cube in table.cubes:
                 drawCubeOutline(app, canvas, cube, 'black')
                 #coords = vecs2Graph(app, cube.vecs)
                 #drawCube(app, canvas, coords, color='orange')  
-
+        '''
 def main():
     runApp(width=600, height=600)
