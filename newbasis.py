@@ -127,6 +127,10 @@ def resetDrawCubeFloor(app, init=False):
     app.COLW = None
     app.CORW = None 
 
+    app.tempCOFloor = None
+    app.tempCOLW = None
+    app.tempCORW = None
+
     app.rotationAngle = 0
 
 def resetFurniture(app):
@@ -160,6 +164,8 @@ def appStarted(app):
     o = (300,60)
     app.tableButton = Button(o, 60,50, padding =10)
     setButtonIcon(app, app.tableButton, 'Table')
+
+    app.buttons = [app.roomButton, app.chairButton, app.tableButton]
     
     #testing out rendering
     app.customRoom = False
@@ -544,6 +550,20 @@ def mouseMoved(app, event):
         floatCubeFloor(app, event)
     elif app.cubeFloorVecs.shape[0]==8 and app.cubeWallHeight==None:
         floatCubeWalls(app, event)
+    
+    for button in app.buttons:
+        if button.mouseOver(app,event):
+            button.fillColor = 'pink'
+            button.lineColor = 'red'
+        else:
+            button.fillColor = 'white'
+            button.lineColor = 'black'
+   # elif app.roomButton.mouseOver(app, event):
+   #     app.roomButton.fillColor = 'pink'
+    #    app.roomButton.lineColor = 'red'
+     #   for button in [app.chairButton, app.tableButton]:
+    #        button.fillColor = 'white'
+    #        button.lineColor = 'black'
 
 def drawCube(app, canvas, cubeCoords, color='black'):
     for i in range(cubeCoords.shape[0]):
@@ -679,17 +699,8 @@ def redrawAll(app, canvas):
             canvas.create_oval(x-r, y-r, x+r, y+r, fill = 'red', width=0)
         
         #buttons
-        for button in [app.roomButton, app.chairButton, app.tableButton]:
-            button.draw(app, canvas)
-            '''
-            box, boy = button.origin
-            bw, bh = button.w, button.h
-            bc = button.color
-            canvas.create_rectangle(box-bw/2, boy-bh/2, box+bw/2, boy+bh/2, fill=bc)
-            if button.icon!=None:
-                for cube in button.icon:
-                    cube.draw(app, canvas, 'black')
-            '''
+        for button in app.buttons:
+            button.draw(app, canvas, button.fillColor, button.lineColor)
 
         ox, oy = app.origin
 

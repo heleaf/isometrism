@@ -9,7 +9,7 @@ class Button(object):
         self.w = w
         self.h = h 
         self.fillColor = fillColor
-        self.line = lineColor
+        self.lineColor = lineColor
         self.padding = padding
         self.origin = origin
         self.iconName = None
@@ -63,10 +63,10 @@ class Button(object):
             self.icon = None
             self.iconName = None
 
-    def draw(self, app, canvas, fillColor='white', lineColor='black'):
+    def draw(self, app, canvas, fillColor, lineColor):
         x, y = self.origin
         w, h = self.w, self.h
-        canvas.create_rectangle(x-w/2, y-h/2, x+w/2, y+h/2, fill=fillColor, outline=lineColor)
+        canvas.create_rectangle(x-w/2, y-h/2, x+w/2, y+h/2, fill=self.fillColor, outline=self.lineColor)
         if self.icon!=None:
             for cube in self.icon:
-                cube.draw(app, canvas, lineColor)
+                cube.draw(app, canvas, self.lineColor)
