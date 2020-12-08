@@ -129,17 +129,12 @@ def resetDrawCubeFloor(app, init=False):
     app.COLW = None
     app.CORW = None 
 
-    #in the view
-    app.COFloorImageCoords = None
-    app.CORWImageCoords = None
-    app.COLWImageCoords = None
-
     app.rotationAngle = 0
 
 def resetFurniture(app):
-    app.furniture = dict()
-    app.furniture['standard'] = []
-    app.furniture['image'] = []
+    #app.furniture = dict()
+    #app.furniture['standard'] = []
+    app.furniture = []
     app.newFurniture = None
 
     #arrays of (start, end) 1d coordinates that are occupied
@@ -175,7 +170,7 @@ def appStarted(app):
 def setButtonIcon(app, button, iconName): #iconName = str, #button = specific app button 
     ovec = graph2Vecs(app,[button.origin])[0]
     button.setIcon(ovec, iconName)
-
+'''
 def rotateCube(app, cube, angle, rotAxis=(0,0,1)): 
     #rotates all the vectors in a cube around an axis
     newCube = np.empty((0,3))
@@ -186,7 +181,7 @@ def rotateCube(app, cube, angle, rotAxis=(0,0,1)):
             rotatedVec = rotateVec(app, vec, 10, rotAxis)
         newCube = np.append(newCube, [rotatedVec], axis=0)
     return newCube
-
+'''
 '''
 def changeAxisAngles(app):
     #try shifting origin? 
@@ -249,7 +244,7 @@ def keyPressed(app, event):
             app.CORW.rotate(app, 10)
             app.COLW.rotate(app, 10)
 
-        for furniture in app.furniture['standard']:
+        for furniture in app.furniture:
             furniture.rotate(app, 10)
 
     elif event.key == 'v':   app.view = not app.view  #toggle view
@@ -270,8 +265,8 @@ def keyPressed(app, event):
             app.CORWImageCoords = perspectiveRender(app, app.cameraBasis, app.CORW.vecs)
             app.COLWImageCoords = perspectiveRender(app, app.cameraBasis, app.COLW.vecs)
 
-            for i in range(len(app.furniture['standard'])):
-                furniture = app.furniture['standard'][i]
+            #for i in range(len(app.furniture)):
+            #    furniture = app.furniture[i]
 
 def makeCubeFloor(app, event, thickness=10):
     th = np.array([0,0,thickness]) #thickness of the floor, arbitrary for now 
@@ -393,9 +388,9 @@ def makeCubeWalls(app, event):
     lx,ly,lz = app.COFloor.origin[0], app.COFloor.origin[1]-lw, 0
     app.COLW = Cube(ll, lw, lh, (lx,ly,lz))
 
-    app.COFloorImageCoords = perspectiveRender(app, app.cameraBasis, app.COFloor.vecs)
-    app.CORWImageCoords = perspectiveRender(app, app.cameraBasis, app.CORW.vecs)
-    app.COLWImageCoords = perspectiveRender(app, app.cameraBasis, app.COLW.vecs)
+    #app.COFloorImageCoords = perspectiveRender(app, app.cameraBasis, app.COFloor.vecs)
+    #app.CORWImageCoords = perspectiveRender(app, app.cameraBasis, app.CORW.vecs)
+    #app.COLWImageCoords = perspectiveRender(app, app.cameraBasis, app.COLW.vecs)
 
     #app.CORW.width
 
@@ -432,8 +427,8 @@ def mousePressed(app, event):
 
         else:
 
-            for i in range(len(app.furniture['standard'])):
-                furniture = app.furniture['standard'][i]
+            for i in range(len(app.furniture)):
+                furniture = app.furniture[i]
 
                 #making hitBox
                 l,w,h = furniture.length, furniture.width, furniture.height
@@ -463,8 +458,8 @@ def mousePressed(app, event):
                     print('im clicked')
             
             #resetting
-            for i in range(len(app.furniture['standard'])):
-                furniture = app.furniture['standard'][i]
+            for i in range(len(app.furniture)):
+                furniture = app.furniture[i]
 
             #for furniture in app.furniture['standard']:
                 if furniture.isClicked:
@@ -472,7 +467,7 @@ def mousePressed(app, event):
 
                     furnitureImageCoords = []
                     
-                    for furniture2 in app.furniture['standard']:
+                    for furniture2 in app.furniture:
                         if furniture!=furniture2 and (furniture.isCollide(furniture2) or furniture2.isCollide(furniture)):
                             furniture.rotateSelf(app, -10, furniture.center)
                             furniture.isClicked = False
@@ -542,7 +537,7 @@ def mouseReleased(app, event):
         elif app.tableButton.isPressed: 
             app.newFurniture = Table(l2,w2,h2, origin=(ox2,oy2,oz2), tableThickness=tth2, legThickness=lth2)
         
-        for furniture in app.furniture['standard']:
+        for furniture in app.furniture:
             if app.newFurniture.isCollide(furniture) or furniture.isCollide(app.newFurniture):
                 print('no :o')
                 app.newFurniture = None
@@ -550,7 +545,7 @@ def mouseReleased(app, event):
                 app.tableButton.isPressed = False
                 return 
     
-        app.furniture['standard'].append(app.newFurniture)
+        app.furniture.append(app.newFurniture)
 
         '''
         furnitureImageCoords = []
@@ -685,10 +680,8 @@ def redrawAll(app, canvas):
         #here's our view window
         canvas.create_rectangle(0,0,app.width, app.height, fill='pink')
         
-        if (isinstance(app.COFloorImageCoords, np.ndarray) 
-            and app.COFloorImageCoords.all() != None):
-
-            for furniture in app.furniture['standard']:
+        if isinstance(app.CORW, Cube):
+            for furniture in app.furniture:
                 furniture.drawImageCoords(app, canvas, color='orange')
 
             for cube in [app.COFloor, app.CORW, app.COLW]:
@@ -747,7 +740,7 @@ def redrawAll(app, canvas):
         #draw furniture
         if app.newFurniture!=None:
             app.newFurniture.draw(app, canvas, 'red')
-        for furniture in app.furniture['standard']:
+        for furniture in app.furniture:
             furniture.draw(app, canvas, 'black')
             #hitBoxCoords = vecs2Graph(app, furniture.hitBox.vecs)
             #drawCube(app, canvas, hitBoxCoords, 'pink')
