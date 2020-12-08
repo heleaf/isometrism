@@ -155,3 +155,25 @@ def initialize(app):
                                 [100, 120,  60],
                                 [150, 120,  60]])
     app.sampleCubeCoords = vecs2Graph(app, app.sampleCubeVecs)
+
+
+        #old collision detection
+        '''
+        for i in range(len(app.occupiedX)):
+            startX = min(app.occupiedX[i])
+            endX = max(app.occupiedX[i])
+            startY = min(app.occupiedY[i])
+            endY = max(app.occupiedY[i])
+            if ((startX < ox2 < endX or startX < ox2+l2 < endX) and
+                (startY < oy2 < endY or startY < oy2+w2 < endY)):
+                print('nope')
+                app.furniture['standard'].pop()
+                app.newFurniture = None
+                app.chairButton.isPressed = False
+                app.tableButton.isPressed = False
+                return 
+
+        #passing collision detection
+        app.occupiedX.append([ox2, ox2+app.newFurniture.length])
+        app.occupiedY.append([oy2, oy2+app.newFurniture.width])
+        '''

@@ -103,3 +103,22 @@ def rotateVec(app, vec, angle, axis): #3D vecs?
 
     rotatedVec = R @ vec
     return rotatedVec
+
+def perspectiveRender(app, cameraBasis, cubeVectors): 
+    #takes in: cameraOrigin(vector), 
+    #          cameraBasis (matrix w/ columns as vectors of camera's basis)
+    #          cubeVectors (matrix w/ vectors as rows)
+    #returns:  matrix of coordinates to render (coordinates as rows)
+
+    #get new basis of cubeVectors (matrix w/ vectors as columns)
+    #print(cubeVectors.shape)
+    numVecs = cubeVectors.shape[0]
+    cameraViewCubeVecs = np.linalg.inv(cameraBasis) @ cubeVectors.T
+
+    imgCoords = np.zeros((numVecs,2)) #8 rows of (x,y) coordinates for Tkinter
+    for i in range(cameraViewCubeVecs.shape[1]): # in terms of columns
+        divisor = cameraViewCubeVecs[:,i][2] #the third element in the column of a vector
+        cameraViewCubeVecs[:,i] *= 1/(divisor) #scale down to get points in the image plane 
+        imgCoords[i] = -cameraViewCubeVecs[:2, i] #get the first two components (pixel addresses)
+
+    return imgCoords

@@ -9,7 +9,6 @@ class Button(object):
         self.origin = origin
         self.iconName = None
         self.icon = None
-        self.iconCoords = None
         self.isPressed = False
 
     def setIcon(self, ovec, iconName):
