@@ -354,14 +354,14 @@ def floatCubeFloor(app, event, thickness=10):
     app.tempCOFloor = Cube(length, width, height, e3)
 
 def floatCubeWalls(app, event):
-    h = app.cubeFloorCoords[3][1]-event.y
+    h = app.cubeFloorCoords[3][1]-event.y #height 
     
     rwVecs = [app.cubeFloorVecs[2], app.cubeFloorVecs[4]] 
 
     for i in range(len(rwVecs)):
-        app.tempRightCubeWallVecs[i] = rwVecs[i]
+        app.tempRightCubeWallVecs[i] = rwVecs[i] #origin? 
         app.tempRightCubeWallVecs[i+2] = rwVecs[i] + np.array([0,0,h])
-        app.tempRightCubeWallVecs[i+4] = rwVecs[i] + np.array([[-10,0,0]])
+        app.tempRightCubeWallVecs[i+4] = rwVecs[i] + np.array([[-10,0,0]]) #origin
         app.tempRightCubeWallVecs[i+6] = rwVecs[i] + np.array([[-10,0,h]])
     
     app.tempRightCubeWallCoords = vecs2Graph(app, app.tempRightCubeWallVecs)
@@ -374,6 +374,21 @@ def floatCubeWalls(app, event):
         app.tempLeftCubeWallVecs[i+6] = lwVecs[i] + np.array([0,-10,h])
 
     app.tempLeftCubeWallCoords = vecs2Graph(app, app.tempLeftCubeWallVecs)
+
+    #making Cube objects of walls for rendering 
+    rl = app.COFloor.height
+    rw = app.COFloor.width
+    rh = h
+    rx,ry,rz = app.COFloor.origin[0]-rl, app.COFloor.origin[1], 0 
+
+    app.tempCORW = Cube(rl, rw, rh, (rx, ry, rz))
+    
+    ll = app.COFloor.length
+    lw = app.COFloor.height
+    lh = h
+    lx,ly,lz = app.COFloor.origin[0], app.COFloor.origin[1]-lw, 0
+    app.tempCOLW = Cube(ll, lw, lh, (lx,ly,lz))
+
 
 def makeCubeWalls(app, event):
     app.cubeWallHeight = app.cubeFloorCoords[3][1]-event.y
@@ -758,9 +773,11 @@ def redrawAll(app, canvas):
             #renderCube(app, canvas, app.CORW)
         
         #walls (moving)
-        elif app.drawCubeFloor and app.cubeFloorVecs.shape[0]==8 and app.cubeWallHeight==None:
-            drawCube(app, canvas, app.tempRightCubeWallCoords, 'red')
-            drawCube(app, canvas, app.tempLeftCubeWallCoords, 'red')
+        elif app.drawCubeFloor and app.cubeFloorVecs.shape[0]==8 and app.cubeWallHeight==None and isinstance(app.tempCORW, Cube):
+            #drawCube(app, canvas, app.tempRightCubeWallCoords, 'red')
+            app.tempCORW.draw(app, canvas, 'red')
+            app.tempCOLW.draw(app, canvas, 'red')
+            #drawCube(app, canvas, app.tempLeftCubeWallCoords, 'red')
 
         #cube floor (static)
         if app.drawCubeFloor and app.cubeFloorVecs.shape[0]==8:
