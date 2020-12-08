@@ -1,15 +1,25 @@
+import numpy as np
+import math
+from cmu_112_graphics import *
 from cube import *
+from newbasis import *
 
 class Button(object):
-    def __init__(self, origin, w, h, color='white', padding=10):
+    def __init__(self, origin, w, h, padding=10, fillColor='white', lineColor='black'):
         self.w = w
         self.h = h 
-        self.color = color
+        self.fillColor = fillColor
+        self.line = lineColor
         self.padding = padding
         self.origin = origin
         self.iconName = None
         self.icon = None
         self.isPressed = False
+
+    def mouseOver(self, app, event):
+        ox,oy = self.origin 
+        w,h = self.w, self.h
+        return ox-w/2 <= event.x <= ox+w/2 and oy-h/2 <= event.y <= oy+h/2
 
     def setIcon(self, ovec, iconName):
         if iconName == 'Chair':
@@ -34,7 +44,6 @@ class Button(object):
             self.icon = [Cube(length, width, height, ovec)] 
             self.iconName = 'Cube'
         elif iconName == 'Room':
-            
             fl = fw = (self.w - self.padding*2)/2
             fh = min(self.w, self.h)*0.02 
             floor = Cube(fl, fw, fh, ovec)
@@ -53,3 +62,11 @@ class Button(object):
         else:
             self.icon = None
             self.iconName = None
+
+    def draw(self, app, canvas, fillColor='white', lineColor='black'):
+        x, y = self.origin
+        w, h = self.w, self.h
+        canvas.create_rectangle(x-w/2, y-h/2, x+w/2, y+h/2, fill=fillColor, outline=lineColor)
+        if self.icon!=None:
+            for cube in self.icon:
+                cube.draw(app, canvas, lineColor)

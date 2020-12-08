@@ -216,6 +216,7 @@ def keyPressed(app, event):
             while app.rotationAngle!=0:
                 rotateAll(app)
             app.showCamera = True
+
     elif event.key == 'r' and not app.view and not app.helpScreen:
         app.cubeTest.rotateSelf(app, 10, center=app.cubeTest.center)
         app.tableTest.rotateSelf(app,10, center=app.tableTest.center)
@@ -245,26 +246,24 @@ def keyPressed(app, event):
         app.cameraBasis = app.cameraBasisAlts[app.viewIndex]
         app.cameraImageCoords = app.cameraImageAlts[app.viewIndex]
 
-        if app.drawCubeFloor and app.rightCubeWallVecs.shape[0]==8:
-            app.COFloorImageCoords = perspectiveRender(app, app.cameraBasis, app.COFloor.vecs)
-            app.CORWImageCoords = perspectiveRender(app, app.cameraBasis, app.CORW.vecs)
-            app.COLWImageCoords = perspectiveRender(app, app.cameraBasis, app.COLW.vecs)
+        #if app.drawCubeFloor and app.rightCubeWallVecs.shape[0]==8:
+        #    app.COFloorImageCoords = perspectiveRender(app, app.cameraBasis, app.COFloor.vecs)
+        #    app.CORWImageCoords = perspectiveRender(app, app.cameraBasis, app.CORW.vecs)
+        #    app.COLWImageCoords = perspectiveRender(app, app.cameraBasis, app.COLW.vecs)
 
-def rotateAll(app):
+def rotateAll(app, angle=10):
     app.showCamera = False
-    app.rotationAngle = (app.rotationAngle+10)%360
-    
+    app.rotationAngle = (app.rotationAngle+angle)%360
     if app.cubeFloorVecs.shape[0]==8:
-        app.COFloor.rotateSelf(app, 10, center=app.COFloor.center)
+        app.COFloor.rotateSelf(app, angle, center=app.COFloor.center)
     if app.rightCubeWallCoords.shape[0]==8:
-        app.CORW.rotateSelf(app, 10, center=app.COFloor.center)
-        app.COLW.rotateSelf(app, 10, center=app.COFloor.center)
-
+        app.CORW.rotateSelf(app, angle, center=app.COFloor.center)
+        app.COLW.rotateSelf(app, angle, center=app.COFloor.center)
     for furniture in app.furniture:
         furniture.rotateSelf(app, 10, center=app.COFloor.center)
 
 def timerFired(app):
-    if app.rotate:
+    if app.rotate and not app.view and not app.helpScreen:
         rotateAll(app)
 
 def makeCubeFloor(app, event, thickness=10):
@@ -393,15 +392,7 @@ def makeCubeWalls(app, event):
     #app.CORW.width
 
 def mousePressed(app, event): 
-    '''
-    if app.drawCubeFloor and app.cubeFloorCoords.shape[0]<8 and app.rotationAngle==0:
-        makeCubeFloor(app, event)
-    elif app.cubeFloorCoords.shape[0]==8 and app.cubeWallHeight==None:
-        makeCubeWalls(app, event)
-    '''
-    rox, roy = app.roomButton.origin
-    rw, rh = app.roomButton.w, app.roomButton.h
-    if rox-rw/2 <= event.x <= rox+rw/2 and roy-rh/2 <= event.y <= roy+rh/2:
+    if app.roomButton.mouseOver(app, event):
         resetDrawCubeFloor(app)
         resetFurniture(app)
 
@@ -412,21 +403,16 @@ def mousePressed(app, event):
         makeCubeWalls(app, event)
 
     elif not app.view and app.drawCubeFloor and app.rightCubeWallVecs.shape[0]==8 and app.rotationAngle==0:
-
-        chox, choy = app.chairButton.origin
-        chw, chh = app.chairButton.w, app.chairButton.h
-
-        tx, ty = app.tableButton.origin
-        tw, th = app.tableButton.w, app.tableButton.h
-
+        
         origin = graph2Vecs(app, [[event.x, event.y]], z=app.COFloor.height)[0]
-        if chox-chw/2<=event.x<=chox+chw/2 and choy-chh/2 <= event.y <=choy+chh/2:
+
+        if app.chairButton.mouseOver(app, event):
             app.chairButton.isPressed = True
             length = width = min(app.COFloor.length/8, app.COFloor.width/8)
             height = length*2.5
             app.newFurniture = Chair(length, width, height, origin=origin, legThickness=min(2,length*0.2))
             print('add chair!')
-        elif tx-tw/2<=event.x<=tx+tw/2 and ty-th/2<=event.y<=ty+th/2:
+        elif app.tableButton.mouseOver(app, event):
             app.tableButton.isPressed = True
             length = app.COFloor.length/6
             width = length*2
@@ -690,10 +676,12 @@ def redrawAll(app, canvas):
             camCoord = vecs2Graph(app, [app.cameraOrigin])[0]
             x,y = camCoord
             r = 3
-            canvas.create_oval(x-r, y-r, x+r, y+r, fill = 'red')
+            canvas.create_oval(x-r, y-r, x+r, y+r, fill = 'red', width=0)
         
         #buttons
         for button in [app.roomButton, app.chairButton, app.tableButton]:
+            button.draw(app, canvas)
+            '''
             box, boy = button.origin
             bw, bh = button.w, button.h
             bc = button.color
@@ -701,6 +689,7 @@ def redrawAll(app, canvas):
             if button.icon!=None:
                 for cube in button.icon:
                     cube.draw(app, canvas, 'black')
+            '''
 
         ox, oy = app.origin
 
