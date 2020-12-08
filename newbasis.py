@@ -165,19 +165,19 @@ def appStarted(app):
     app.tableButton = Button(o, 60,50, padding =10)
     setButtonIcon(app, app.tableButton, 'Table')
 
-    o = (100, app.height-90)
+    o = (100, app.height-80)
     app.leftTurnButton = Button(o, 40,40, padding=10)
     app.leftTurnButton.setIcon(None, 'Left Turn')
 
-    o = (160, app.height-90)
+    o = (160, app.height-80)
     app.cameraButton = Button(o, 40,40, padding=10)
     app.cameraButton.setIcon(None, 'Camera')
 
-    o = (app.width-100-60, app.height-90)
+    o = (app.width-100-60, app.height-80)
     app.viewButton = Button(o, 40,40, padding=10)
     app.viewButton.setIcon(None, 'Eye')
 
-    o = (app.width-100, app.height-90)
+    o = (app.width-100, app.height-80)
     app.helpButton = Button(o, 40,40, padding=10)
     app.helpButton.setIcon(None, 'Help')
     #left rotate arrow
@@ -186,7 +186,8 @@ def appStarted(app):
     #right rotate arrow
 
     app.buttons = [app.roomButton, app.chairButton, app.tableButton, app.leftTurnButton, app.cameraButton, app.viewButton, app.helpButton]
-    
+    app.editButtons = [app.roomButton, app.chairButton, app.tableButton, app.leftTurnButton, app.cameraButton, app.viewButton] 
+
     #testing out rendering
     app.customRoom = False
     app.helpScreen = True
@@ -302,7 +303,9 @@ def makeCubeFloor(app, event, thickness=10):
         for i in range(4):
             app.tempCubeFloorVecs = np.append(app.tempCubeFloorVecs, [e1], axis=0)
             app.tempCubeFloorVecs = np.append(app.tempCubeFloorVecs, [e1+th], axis=0)
-        app.tempCubeFloorCoords = vecs2Graph(app, app.tempCubeFloorVecs) 
+        app.tempCubeFloorCoords = vecs2Graph(app, app.tempCubeFloorVecs)
+
+        #app.tempCOFloor = Cube(0,0,thickness, e1) 
 
     elif app.cubeFloorVecs.shape[0] == 2: #rows 
         secondPoint = np.array([event.x, event.y])
@@ -333,17 +336,22 @@ def makeCubeFloor(app, event, thickness=10):
         app.COFloor = Cube(l,w,h,e3)
         print('madeit')
 
-def floatCubeFloor(app, event):
-    th = np.array([0,0,10]) #arbitrary thickness
-    e2 = graph2Vecs(app, np.array([[event.x, event.y]]))[0]
-    e1 = app.cubeFloorVecs[0]
-    e3 = np.array([e2[0], e1[1], 0])
+def floatCubeFloor(app, event, thickness=10):
+    th = np.array([0,0,thickness]) #arbitrary thickness (we think of as height)
+    e2 = graph2Vecs(app, np.array([[event.x, event.y]]))[0] #(origin + [0,width,0])
+    e1 = app.cubeFloorVecs[0] #(origin + [length, 0,0])
+    e3 = np.array([e2[0], e1[1], 0]) #(origin)
     e4 = np.array([e1[0], e2[1], 0])
     vecs2Add = [e2, e2+th, e3, e3+th, e4, e4+th]
     for i in range(2, 8):
         app.tempCubeFloorVecs[i] = vecs2Add[i-2]
     #print(app.tempCubeFloorVecs)
     app.tempCubeFloorCoords = vecs2Graph(app, app.tempCubeFloorVecs) 
+
+    length = (e1 - e3)[0] #origin + [length,0,0] - origin 
+    width = (e2 - e3)[1] #origin + [0,width,0] - origin 
+    height = th[2]
+    app.tempCOFloor = Cube(length, width, height, e3)
 
 def floatCubeWalls(app, event):
     h = app.cubeFloorCoords[3][1]-event.y
@@ -418,7 +426,13 @@ def makeCubeWalls(app, event):
     #app.CORW.width
 
 def mousePressed(app, event): 
-    if app.roomButton.mouseOver(app, event):
+    if app.helpButton.mouseOver(app, event):
+        app.helpScreen = not app.helpScreen
+    
+    elif not app.helpScreen and app.viewButton.mouseOver(app, event):
+        app.view = not app.view
+
+    elif not app.view and not app.helpScreen and app.roomButton.mouseOver(app, event):
         resetDrawCubeFloor(app)
         resetFurniture(app)
 
@@ -428,12 +442,15 @@ def mousePressed(app, event):
     elif app.cubeFloorCoords.shape[0]==8 and app.cubeWallHeight==None:
         makeCubeWalls(app, event)
 
-    elif app.leftTurnButton.mouseOver(app, event):
+    elif not app.view and not app.helpScreen and app.leftTurnButton.mouseOver(app, event):
         app.rotate = not app.rotate
         if not app.rotate:
             while app.rotationAngle!=0:
                 rotateAll(app)
             app.showCamera = True
+
+    elif not app.view and not app.helpScreen and app.cameraButton.mouseOver(app, event):
+        app.showCamera = not app.showCamera
 
     elif not app.view and app.drawCubeFloor and app.rightCubeWallVecs.shape[0]==8 and not app.rotate:
         
@@ -700,9 +717,12 @@ def redrawAll(app, canvas):
         app.chairTest.draw(app, canvas)
         app.tableTest.draw(app, canvas)
 
+        app.helpButton.draw(app, canvas, app.helpButton.fillColor, app.helpButton.lineColor)
+
     elif app.view:
         #here's our view window
         canvas.create_rectangle(0,0,app.width, app.height, fill='pink')
+    
         
         if isinstance(app.CORW, Cube):
             for furniture in app.furniture:
@@ -710,6 +730,9 @@ def redrawAll(app, canvas):
 
             for cube in [app.COFloor, app.CORW, app.COLW]:
                 cube.drawImageCoords(app, canvas, color='black')
+
+        app.viewButton.draw(app, canvas, app.viewButton.fillColor, app.viewButton.lineColor)
+        app.helpButton.draw(app, canvas, app.helpButton.fillColor, app.helpButton.lineColor)
     
     else:
         if app.showCamera:
@@ -725,10 +748,6 @@ def redrawAll(app, canvas):
             r = 3
             canvas.create_oval(x-r, y-r, x+r, y+r, fill = 'red', width=0)
         
-        #buttons
-        for button in app.buttons:
-            button.draw(app, canvas, button.fillColor, button.lineColor)
-
         ox, oy = app.origin
 
         #walls (static)
@@ -749,8 +768,9 @@ def redrawAll(app, canvas):
             #renderCube(app, canvas, app.COFloor)
 
         #cube floor (moving)
-        if app.drawCubeFloor and app.cubeFloorVecs.shape[0]==2:
-            drawCube(app, canvas, app.tempCubeFloorCoords, 'red')
+        if app.drawCubeFloor and app.cubeFloorVecs.shape[0]==2 and isinstance(app.tempCOFloor, Cube):
+            #drawCube(app, canvas, app.tempCubeFloorCoords, 'red')
+            app.tempCOFloor.draw(app, canvas, 'red')
 
         #draw furniture
         if app.newFurniture!=None:
@@ -759,6 +779,11 @@ def redrawAll(app, canvas):
             furniture.draw(app, canvas, 'black')
             #hitBoxCoords = vecs2Graph(app, furniture.hitBox.vecs)
             #drawCube(app, canvas, hitBoxCoords, 'pink')
+
+        #buttons
+        for button in app.editButtons+[app.helpButton]:
+            button.draw(app, canvas, button.fillColor, button.lineColor)
+
 
 def main():
     runApp(width=600, height=600)
