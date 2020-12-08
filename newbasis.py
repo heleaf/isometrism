@@ -32,110 +32,65 @@ def initializeTitlePage(app):
 
 def initializeView(app): #perspective rendering
     app.view = False
-    app.cameraOrigin = np.array([0,30,60]) #change this to be something based on where the room is
-    #app.cameraOrigin = np.array([100,0,30])
-    imageDistance = 35
-    imageLength = 80
-    imageHeight = 80
+    app.cameraOrigin = np.array([0,30,60]) 
+    makeCameraBases(app, app.cameraOrigin)
+    app.viewIndex = 0
+    app.cameraBasis = app.cameraBasisAlts[app.viewIndex]
+    app.cameraImageCoords = app.cameraImageAlts[app.viewIndex]
 
-    #be able to move the camera (then recalculate all imageCoordsFront)
-    #generate the camera based on where the player's room is built
-    #imageLength = imageHeight = 100
+def makeCameraBases(app, cameraOrigin=np.array([0,30,60]), imageDistance=35, imageLength=80, imageHeight=80):
 
-    #front facing (push forward on x)
-    imageTopLeft = app.cameraOrigin + np.array([imageDistance, imageLength/2, imageHeight/2])
+    #front facing 
+    f1 = np.array([0,imageLength/app.width,0])
+    f2 = np.array([0,0,imageHeight/app.height])
+    f3 = cameraOrigin + np.array([imageDistance, imageLength/2, imageHeight/2]) 
+   
+    imageTopLeft = f3
     imageTopRight = imageTopLeft + np.array([0,-imageLength, 0])
     imageBotLeft = imageTopLeft + np.array([0,0,-imageHeight])
     imageBotRight = imageTopLeft + np.array([0,-imageLength,-imageHeight])
-    app.cameraImageCoords = app.imageCoordsFront = vecs2Graph(app, [imageTopLeft, imageTopRight, imageBotRight, imageBotLeft])
+    app.imageCoordsFront = vecs2Graph(app, [imageTopLeft, imageTopRight, imageBotRight, imageBotLeft])
 
-    a1 = np.array([0,imageLength/app.width,0])
-    a2 = np.array([0,0,imageHeight/app.height])
-    a3 = imageTopLeft 
-    app.cameraBasis = np.array([a1,a2,a3]).T #basis of camera vectors as columns 
+    #right facing
+    r1 = np.array([imageLength/app.width,0,0])
+    r2 = np.array([0,0,imageHeight/app.height])
+    r3 = cameraOrigin + np.array([imageLength/2, -imageDistance, imageHeight/2]) 
 
-    #left facing (flipped)
-    #b1 = np.array([imageLength/app.width,0,0])
-    #b2 = np.array([0,0,imageHeight/app.height])
-    #b3 = app.cameraOrigin + np.array([imageLength/2, imageDistance, imageHeight/2])
+    imageTopLeft = r3
+    imageTopRight = imageTopLeft + np.array([-imageLength, 0,0])
+    imageBotLeft = imageTopLeft + np.array([0,0,-imageHeight])
+    imageBotRight = imageTopLeft + np.array([-imageLength, 0, -imageHeight])
+    app.imageCoordsRight = vecs2Graph(app, [imageTopLeft, imageTopRight, imageBotRight, imageBotLeft])
 
-    #app.cameraBasis = np.array([b1,b2,b3]).T 
-    #gibbirish
-    '''
-    c1 = np.array([imageLength/app.width,0,0])
-    c2 = np.array([0,0,imageHeight/app.height])
-    c3 = app.cameraOrigin + np.array([-imageLength/2, imageDistance, imageHeight/2])
+    #back facing
+    b1 = np.array([0,-imageLength/app.width, 0])
+    b2 = np.array([0,0,imageHeight/app.height])
+    b3 = cameraOrigin + np.array([-imageLength/2, -imageDistance, imageHeight/2])
 
-    app.cameraBasis = np.array([c1,c2,c3]).T
-    '''
+    imageTopLeft = b3
+    imageTopRight = imageTopLeft + np.array([0,imageLength,0])
+    imageBotLeft = imageTopLeft + np.array([0,0,-imageHeight])
+    imageBotRight = imageTopLeft + np.array([0, imageLength, -imageHeight])
+    app.imageCoordsBack = vecs2Graph(app, [imageTopLeft, imageTopRight, imageBotRight, imageBotLeft])
 
-    #this left facing is better, i think
-    d1 = np.array([-imageLength/app.width,0,0])
-    d2 = np.array([0,0,imageHeight/app.height])
-    d3 = app.cameraOrigin + np.array([-imageLength/2, imageDistance, imageHeight/2])
+    #left facing
+    l1 = np.array([-imageLength/app.width,0,0])
+    l2 = np.array([0,0,imageHeight/app.height])
+    l3 = cameraOrigin + np.array([-imageLength/2, imageDistance, imageHeight/2])
     
-    imageTopLeft = d3
+    imageTopLeft = l3
     imageTopRight = imageTopLeft + np.array([imageLength,0,0])
     imageBotLeft = imageTopLeft + np.array([0,0,-imageHeight])
     imageBotRight = imageTopLeft + np.array([imageLength, 0, -imageHeight])
     app.imageCoordsLeft = vecs2Graph(app, [imageTopLeft, imageTopRight, imageBotRight, imageBotLeft]) 
 
-    #???? its flipped tho ok now its good right####
-    e1 = np.array([imageLength/app.width,0,0])
-    e2 = np.array([0,0,imageHeight/app.height])
-    e3 = app.cameraOrigin + np.array([imageLength/2, -imageDistance, imageHeight/2]) 
+    #f - front
+    #r - right 
+    #b - back
+    #l - left
 
-    imageTopLeft = e3
-    imageTopRight = imageTopLeft + np.array([-imageLength, 0,0])
-    imageBotLeft = imageTopLeft + np.array([0,0,-imageHeight])
-    imageBotRight = imageTopLeft + np.array([-imageLength, 0, -imageHeight])
-    app.imageCoordsRight = vecs2Graph(app, [imageTopLeft, imageTopRight, imageBotRight, imageBotLeft])
-    #if still bad do -imageLength/app.width for e1 and e3
-    
-
-    #look back
-    f1 = np.array([0,-imageLength/app.width, 0])
-    f2 = np.array([0,0,imageHeight/app.height])
-    f3 = app.cameraOrigin + np.array([-imageLength/2, -imageDistance, imageHeight/2])
-
-    imageTopLeft = f3
-    imageTopRight = imageTopLeft + np.array([0,imageLength,0])
-    imageBotLeft = imageTopLeft + np.array([0,0,-imageHeight])
-    imageBotRight = imageTopLeft + np.array([0, imageLength, -imageHeight])
-    app.imageCoordsBack = vecs2Graph(app, [imageTopLeft, imageTopRight, imageBotRight, imageBotLeft])
-    #f3 
-    #app.cameraBasis = np.array([f1,f2,f3]).T
-
-    #a - front
-    #e - right 
-    #f - back
-    #d - left
-
-
-    #app.cameraBasisAlts = [np.array([a1,a2,a3]).T, np.array([d1,d2,d3]).T, np.array([f1,f2,f3]).T]
-    #app.cameraImageAlts = [app.imageCoordsFront, app.imageCoordsLeft, app.imageCoordsBack]
-
-    app.cameraBasisAlts = [np.array([a1,a2,a3]).T, np.array([e1,e2,e3]).T, np.array([f1,f2,f3]).T, np.array([d1,d2,d3]).T]
+    app.cameraBasisAlts = [np.array([f1,f2,f3]).T, np.array([r1,r2,r3]).T, np.array([b1,b2,b3]).T, np.array([l1,l2,l3]).T]
     app.cameraImageAlts = [app.imageCoordsFront, app.imageCoordsRight, app.imageCoordsBack, app.imageCoordsLeft]
-    app.viewIndex = 0
-
-    #app.cameraBasis = np.array([b1,b2,b3]).T
-
-    #left facing (push forward on y)
-    '''
-    imageTopLeft = app.cameraOrigin + np.array([imageLength/2, -imageDistance, imageHeight/2])
-    a1 = np.array([imageLength/app.width, 0,0])
-    a2 = np.array([0,0,imageHeight/app.height])
-    a3 = imageTopLeft
-    '''
-    #app.cameraBasis = np.array([a1,a2,a3]).T 
-    #app.cameraBasisAlts.append(np.array([a1,a2,a3]))
-    #imageTopRight = imageTopLeft + np.array([-imageLength, 0,0])
-    #imageBotLeft = imageTopLeft + np.array([0,0,-imageHeight])
-    #imageBotRight = imageTopLeft + np.array([-imageLength, 0, -imageHeight])
-
-def makeCameraBasis(app):
-    pass
 
 def initializeButtons(app):
     o = (100,60)
@@ -257,17 +212,49 @@ def keyPressed(app, event):
     elif event.key == 'h':
         app.helpScreen = not app.helpScreen
     elif event.key == 'r' and not app.helpScreen and not app.title and not app.view:
-        rotateAll(app)
+        rotateAll(app,  angle=10)
+    elif event.key == 't' and not app.helpScreen and not app.title and not app.view:
+        rotateAll(app,  angle=-10)
     elif event.key == 'v' and not app.title:
         app.view = not app.view
-    elif event.key == 'w': pass
-    elif event.key == 'a': pass
-    elif event.key == 's': pass
-    elif event.key == 'd': pass 
+    elif event.key == 'w': #move camera up
+        app.cameraOrigin += np.array([0,0,5])
+        makeCameraBases(app, app.cameraOrigin)
+        app.cameraBasis = app.cameraBasisAlts[app.viewIndex]
+        app.cameraImageCoords = app.cameraImageAlts[app.viewIndex]
+    elif event.key == 'a': #move camera left (decr y)
+        app.cameraOrigin += np.array([0,-5,0])
+        makeCameraBases(app, app.cameraOrigin)
+        app.cameraBasis = app.cameraBasisAlts[app.viewIndex]
+        app.cameraImageCoords = app.cameraImageAlts[app.viewIndex] 
+    elif event.key == 's': #move camera down
+        app.cameraOrigin += np.array([0,0,-5])
+        makeCameraBases(app, app.cameraOrigin)
+        app.cameraBasis = app.cameraBasisAlts[app.viewIndex]
+        app.cameraImageCoords = app.cameraImageAlts[app.viewIndex] 
+    elif event.key == 'd': #move camera right (incr y)
+        app.cameraOrigin += np.array([0,5,0])
+        makeCameraBases(app, app.cameraOrigin)
+        app.cameraBasis = app.cameraBasisAlts[app.viewIndex]
+        app.cameraImageCoords = app.cameraImageAlts[app.viewIndex]
+    elif event.key == 'z': #move camera forward (incr x)
+        app.cameraOrigin += np.array([5,0,0])
+        makeCameraBases(app, app.cameraOrigin)
+        app.cameraBasis = app.cameraBasisAlts[app.viewIndex]
+        app.cameraImageCoords = app.cameraImageAlts[app.viewIndex] 
+    elif event.key == 'x': #move camera backwards (decr x)
+        app.cameraOrigin += np.array([-5,0,0])
+        makeCameraBases(app, app.cameraOrigin)
+        app.cameraBasis = app.cameraBasisAlts[app.viewIndex]
+        app.cameraImageCoords = app.cameraImageAlts[app.viewIndex]
     elif event.key == 'c':
         app.showCamera = not app.showCamera
-    elif event.key == 'x': #change camera view 
+    elif event.key == 'f': #change camera view (clockwise)
         app.viewIndex = (app.viewIndex + 1)%len(app.cameraBasisAlts)
+        app.cameraBasis = app.cameraBasisAlts[app.viewIndex]
+        app.cameraImageCoords = app.cameraImageAlts[app.viewIndex]
+    elif event.key == 'g': #change camera view (counterclockwise)
+        app.viewIndex = (app.viewIndex - 1)%len(app.cameraBasisAlts)
         app.cameraBasis = app.cameraBasisAlts[app.viewIndex]
         app.cameraImageCoords = app.cameraImageAlts[app.viewIndex]
 
@@ -280,7 +267,7 @@ def rotateAll(app, angle=10):
         app.CORW.rotateSelf(app, angle, center=app.COFloor.center)
         app.COLW.rotateSelf(app, angle, center=app.COFloor.center)
     for furniture in app.furniture:
-        furniture.rotateSelf(app, 10, center=app.COFloor.center)
+        furniture.rotateSelf(app, angle, center=app.COFloor.center)
 
 def timerFired(app):
     if app.rotate and not app.view and not app.helpScreen and app.drawCubeFloor and isinstance(app.CORW, Cube):

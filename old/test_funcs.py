@@ -177,3 +177,109 @@ def initialize(app):
         app.occupiedX.append([ox2, ox2+app.newFurniture.length])
         app.occupiedY.append([oy2, oy2+app.newFurniture.width])
         '''
+
+
+        '''
+    #change this to be something based on where the room is
+    #app.cameraOrigin = np.array([100,0,30])
+    imageDistance = 35
+    imageLength = 80
+    imageHeight = 80
+
+    #be able to move the camera (then recalculate all imageCoordsFront)
+    #generate the camera based on where the player's room is built
+    #imageLength = imageHeight = 100
+
+    #front facing (push forward on x)
+    imageTopLeft = app.cameraOrigin + np.array([imageDistance, imageLength/2, imageHeight/2])
+    imageTopRight = imageTopLeft + np.array([0,-imageLength, 0])
+    imageBotLeft = imageTopLeft + np.array([0,0,-imageHeight])
+    imageBotRight = imageTopLeft + np.array([0,-imageLength,-imageHeight])
+    app.cameraImageCoords = app.imageCoordsFront = vecs2Graph(app, [imageTopLeft, imageTopRight, imageBotRight, imageBotLeft])
+
+    a1 = np.array([0,imageLength/app.width,0])
+    a2 = np.array([0,0,imageHeight/app.height])
+    a3 = imageTopLeft 
+    app.cameraBasis = np.array([a1,a2,a3]).T #basis of camera vectors as columns 
+
+    #left facing (flipped)
+    #b1 = np.array([imageLength/app.width,0,0])
+    #b2 = np.array([0,0,imageHeight/app.height])
+    #b3 = app.cameraOrigin + np.array([imageLength/2, imageDistance, imageHeight/2])
+
+    #app.cameraBasis = np.array([b1,b2,b3]).T 
+    #gibbirish
+    '''
+    '''
+    c1 = np.array([imageLength/app.width,0,0])
+    c2 = np.array([0,0,imageHeight/app.height])
+    c3 = app.cameraOrigin + np.array([-imageLength/2, imageDistance, imageHeight/2])
+
+    app.cameraBasis = np.array([c1,c2,c3]).T
+    '''
+    '''
+
+    #this left facing is better, i think
+    d1 = np.array([-imageLength/app.width,0,0])
+    d2 = np.array([0,0,imageHeight/app.height])
+    d3 = app.cameraOrigin + np.array([-imageLength/2, imageDistance, imageHeight/2])
+    
+    imageTopLeft = d3
+    imageTopRight = imageTopLeft + np.array([imageLength,0,0])
+    imageBotLeft = imageTopLeft + np.array([0,0,-imageHeight])
+    imageBotRight = imageTopLeft + np.array([imageLength, 0, -imageHeight])
+    app.imageCoordsLeft = vecs2Graph(app, [imageTopLeft, imageTopRight, imageBotRight, imageBotLeft]) 
+
+    #???? its flipped tho ok now its good right####
+    e1 = np.array([imageLength/app.width,0,0])
+    e2 = np.array([0,0,imageHeight/app.height])
+    e3 = app.cameraOrigin + np.array([imageLength/2, -imageDistance, imageHeight/2]) 
+
+    imageTopLeft = e3
+    imageTopRight = imageTopLeft + np.array([-imageLength, 0,0])
+    imageBotLeft = imageTopLeft + np.array([0,0,-imageHeight])
+    imageBotRight = imageTopLeft + np.array([-imageLength, 0, -imageHeight])
+    app.imageCoordsRight = vecs2Graph(app, [imageTopLeft, imageTopRight, imageBotRight, imageBotLeft])
+    #if still bad do -imageLength/app.width for e1 and e3
+    
+
+    #look back
+    f1 = np.array([0,-imageLength/app.width, 0])
+    f2 = np.array([0,0,imageHeight/app.height])
+    f3 = app.cameraOrigin + np.array([-imageLength/2, -imageDistance, imageHeight/2])
+
+    imageTopLeft = f3
+    imageTopRight = imageTopLeft + np.array([0,imageLength,0])
+    imageBotLeft = imageTopLeft + np.array([0,0,-imageHeight])
+    imageBotRight = imageTopLeft + np.array([0, imageLength, -imageHeight])
+    app.imageCoordsBack = vecs2Graph(app, [imageTopLeft, imageTopRight, imageBotRight, imageBotLeft])
+    #f3 
+    #app.cameraBasis = np.array([f1,f2,f3]).T
+
+    #a - front
+    #e - right 
+    #f - back
+    #d - left
+
+
+    #app.cameraBasisAlts = [np.array([a1,a2,a3]).T, np.array([d1,d2,d3]).T, np.array([f1,f2,f3]).T]
+    #app.cameraImageAlts = [app.imageCoordsFront, app.imageCoordsLeft, app.imageCoordsBack]
+
+    app.cameraBasisAlts = [np.array([a1,a2,a3]).T, np.array([e1,e2,e3]).T, np.array([f1,f2,f3]).T, np.array([d1,d2,d3]).T]
+    app.cameraImageAlts = [app.imageCoordsFront, app.imageCoordsRight, app.imageCoordsBack, app.imageCoordsLeft]
+    '''
+
+    #app.cameraBasis = np.array([b1,b2,b3]).T
+
+    #left facing (push forward on y)
+    '''
+    imageTopLeft = app.cameraOrigin + np.array([imageLength/2, -imageDistance, imageHeight/2])
+    a1 = np.array([imageLength/app.width, 0,0])
+    a2 = np.array([0,0,imageHeight/app.height])
+    a3 = imageTopLeft
+    '''
+    #app.cameraBasis = np.array([a1,a2,a3]).T 
+    #app.cameraBasisAlts.append(np.array([a1,a2,a3]))
+    #imageTopRight = imageTopLeft + np.array([-imageLength, 0,0])
+    #imageBotLeft = imageTopLeft + np.array([0,0,-imageHeight])
+    #imageBotRight = imageTopLeft + np.array([-imageLength, 0, -imageHeight])

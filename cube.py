@@ -89,7 +89,7 @@ class Cube(object):
             if vec[0]==vec[1]==vec[2]==0:
                 rotatedVec = vec
             else:
-                rotatedVec = rotateVec(app, vec, 10, rotAxis)
+                rotatedVec = rotateVec(app, vec, angle, rotAxis)
             rotatedCenteredVecs = np.append(rotatedCenteredVecs, [rotatedVec], axis=0)
         
         #push the rotated vectors back to the cube's original centered position 
