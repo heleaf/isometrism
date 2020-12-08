@@ -153,19 +153,39 @@ def appStarted(app):
 
     #########
     resetFurniture(app)
-    o = (140,60)
+    o = (100,60)
     app.roomButton = Button(o, 60,50, padding=10)
     setButtonIcon(app, app.roomButton, 'Room')
 
-    o = (220,60)
+    o = (180,60)
     app.chairButton = Button(o, 60,50, padding = 10)
     setButtonIcon(app, app.chairButton, 'Chair')
 
-    o = (300,60)
+    o = (260,60)
     app.tableButton = Button(o, 60,50, padding =10)
     setButtonIcon(app, app.tableButton, 'Table')
 
-    app.buttons = [app.roomButton, app.chairButton, app.tableButton]
+    o = (100, app.height-90)
+    app.leftTurnButton = Button(o, 40,40, padding=10)
+    app.leftTurnButton.setIcon(None, 'Left Turn')
+
+    o = (160, app.height-90)
+    app.cameraButton = Button(o, 40,40, padding=10)
+    app.cameraButton.setIcon(None, 'Camera')
+
+    o = (app.width-100-60, app.height-90)
+    app.viewButton = Button(o, 40,40, padding=10)
+    app.viewButton.setIcon(None, 'Eye')
+
+    o = (app.width-100, app.height-90)
+    app.helpButton = Button(o, 40,40, padding=10)
+    app.helpButton.setIcon(None, 'Help')
+    #left rotate arrow
+
+    #o = (app.width-60, app.height/2)
+    #right rotate arrow
+
+    app.buttons = [app.roomButton, app.chairButton, app.tableButton, app.leftTurnButton, app.cameraButton, app.viewButton, app.helpButton]
     
     #testing out rendering
     app.customRoom = False
@@ -408,7 +428,14 @@ def mousePressed(app, event):
     elif app.cubeFloorCoords.shape[0]==8 and app.cubeWallHeight==None:
         makeCubeWalls(app, event)
 
-    elif not app.view and app.drawCubeFloor and app.rightCubeWallVecs.shape[0]==8 and app.rotationAngle==0:
+    elif app.leftTurnButton.mouseOver(app, event):
+        app.rotate = not app.rotate
+        if not app.rotate:
+            while app.rotationAngle!=0:
+                rotateAll(app)
+            app.showCamera = True
+
+    elif not app.view and app.drawCubeFloor and app.rightCubeWallVecs.shape[0]==8 and not app.rotate:
         
         origin = graph2Vecs(app, [[event.x, event.y]], z=app.COFloor.height)[0]
 

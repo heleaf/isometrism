@@ -170,7 +170,7 @@ class Cube(object):
                 rightFrontFaceVecs, leftBackFaceVecs, 
                 rightBackFaceVecs, botFaceVecs]
 
-    def draw(self, app, canvas, color='black'):
+    def draw(self, app, canvas, color='black', fill=None):
         topFaceVecs, leftFrontFaceVecs, \
         rightFrontFaceVecs, leftBackFaceVecs, \
         rightBackFaceVecs, botFaceVecs = self.getFaceVecs()
@@ -273,7 +273,7 @@ class Table(Cube):
         self.id -= 1 
         Table.currentId -=1
 
-    def draw(self, app, canvas, color='black'):
+    def draw(self, app, canvas, color='black',fill=None):
         for cube in self.cubes:
             cube.draw(app, canvas, color)
 
