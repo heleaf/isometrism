@@ -105,22 +105,7 @@ def resetDrawCubeFloor(app, init=False):
     app.cubeFloorVecs = np.empty((0,3))
     app.cubeFloorCoords = np.empty((0,2))
 
-    #hovering floor
-    app.tempCubeFloorVecs = np.empty((0,3))
-    app.tempCubeFloorCoords = np.empty((0,2))
-
     app.cubeWallHeight = None
-
-    app.leftCubeWallCoords = np.empty((0,2))
-    app.rightCubeWallCoords = np.empty((0,2))
-    app.leftCubeWallVecs = np.empty((0,3))
-    app.rightCubeWallVecs = np.empty((0,3))
-
-    #hovering walls
-    app.tempLeftCubeWallCoords = np.empty((0,2))
-    app.tempRightCubeWallCoords = np.empty((0,2))
-    app.tempLeftCubeWallVecs = np.empty((0,3))
-    app.tempRightCubeWallVecs = np.empty((0,3))
 
     #objects 
     app.COFloor = None
@@ -141,6 +126,46 @@ def resetFurniture(app):
     app.occupiedX = []
     app.occupiedY = []
 
+def initializeButtons(app):
+    o = (100,60)
+    app.roomButton = Button(o, 60,50, padding=10, iconName='Room', ovec=True, app=app)
+    #app.roomButton.setIcon('Room', ovec=True, app=app)
+
+    o = (180,60)
+    app.chairButton = Button(o, 60,50, padding = 10, iconName='Chair', ovec=True, app=app)
+    #app.chairButton.setIcon('Chair', ovec=True, app=app)
+
+    o = (260,60)
+    app.tableButton = Button(o, 60,50, padding =10, iconName='Table', ovec=True, app=app)
+    #app.tableButton.setIcon('Table', ovec=True, app=app)
+
+    o = (100, app.height-80)
+    app.leftTurnButton = Button(o, 40,40, padding=10, iconName='Left Turn')
+    #app.leftTurnButton.setIcon('Left Turn')
+
+    o = (160, app.height-80)
+    app.cameraButton = Button(o, 40,40, padding=10, iconName='Camera')
+    #app.cameraButton.setIcon('Camera')
+
+    o = (app.width-100-60, app.height-80)
+    app.viewButton = Button(o, 40,40, padding=10, iconName='Eye')
+    #app.viewButton.setIcon('Eye')
+
+    o = (app.width-100, app.height-80)
+    app.helpButton = Button(o, 40,40, padding=10, iconName='Help')
+    #app.helpButton.setIcon('Help')
+
+    #left rotate arrow
+
+    #o = (app.width-60, app.height/2)
+    #right rotate arrow
+
+    app.buttons = [app.roomButton, app.chairButton, app.tableButton, 
+                   app.leftTurnButton, app.cameraButton, app.viewButton, 
+                   app.helpButton]
+    app.editButtons = [app.roomButton, app.chairButton, app.tableButton, 
+                       app.leftTurnButton, app.cameraButton, app.viewButton] 
+
 def appStarted(app):
     initialize3D(app)
     app.rotationAngle = 0
@@ -153,40 +178,7 @@ def appStarted(app):
 
     #########
     resetFurniture(app)
-    o = (100,60)
-    app.roomButton = Button(o, 60,50, padding=10)
-    setButtonIcon(app, app.roomButton, 'Room')
-
-    o = (180,60)
-    app.chairButton = Button(o, 60,50, padding = 10)
-    setButtonIcon(app, app.chairButton, 'Chair')
-
-    o = (260,60)
-    app.tableButton = Button(o, 60,50, padding =10)
-    setButtonIcon(app, app.tableButton, 'Table')
-
-    o = (100, app.height-80)
-    app.leftTurnButton = Button(o, 40,40, padding=10)
-    app.leftTurnButton.setIcon(None, 'Left Turn')
-
-    o = (160, app.height-80)
-    app.cameraButton = Button(o, 40,40, padding=10)
-    app.cameraButton.setIcon(None, 'Camera')
-
-    o = (app.width-100-60, app.height-80)
-    app.viewButton = Button(o, 40,40, padding=10)
-    app.viewButton.setIcon(None, 'Eye')
-
-    o = (app.width-100, app.height-80)
-    app.helpButton = Button(o, 40,40, padding=10)
-    app.helpButton.setIcon(None, 'Help')
-    #left rotate arrow
-
-    #o = (app.width-60, app.height/2)
-    #right rotate arrow
-
-    app.buttons = [app.roomButton, app.chairButton, app.tableButton, app.leftTurnButton, app.cameraButton, app.viewButton, app.helpButton]
-    app.editButtons = [app.roomButton, app.chairButton, app.tableButton, app.leftTurnButton, app.cameraButton, app.viewButton] 
+    initializeButtons(app)
 
     #testing out rendering
     app.customRoom = False
@@ -195,10 +187,6 @@ def appStarted(app):
     app.cubeTest = Cube(30,30,30,(100,100,0))
     app.tableTest = Table(30,30,30,(200,200,0))
     app.chairTest = Chair(30,30,30,(300,300,0))
-
-def setButtonIcon(app, button, iconName): #iconName = str, #button = specific app button 
-    ovec = graph2Vecs(app,[button.origin])[0]
-    button.setIcon(ovec, iconName)
 '''
 def changeAxisAngles(app):
     #try shifting origin? 
@@ -281,16 +269,16 @@ def keyPressed(app, event):
 def rotateAll(app, angle=10):
     app.showCamera = False
     app.rotationAngle = (app.rotationAngle+angle)%360
-    if app.cubeFloorVecs.shape[0]==8:
+    if isinstance(app.COFloor, Cube):#app.cubeFloorVecs.shape[0]==8:
         app.COFloor.rotateSelf(app, angle, center=app.COFloor.center)
-    if app.rightCubeWallCoords.shape[0]==8:
+    if isinstance(app.CORW, Cube): #app.rightCubeWallCoords.shape[0]==8:
         app.CORW.rotateSelf(app, angle, center=app.COFloor.center)
         app.COLW.rotateSelf(app, angle, center=app.COFloor.center)
     for furniture in app.furniture:
         furniture.rotateSelf(app, 10, center=app.COFloor.center)
 
 def timerFired(app):
-    if app.rotate and not app.view and not app.helpScreen:
+    if app.rotate and not app.view and not app.helpScreen and app.drawCubeFloor and isinstance(app.CORW, Cube):
         rotateAll(app)
 
 def makeCubeFloor(app, event, thickness=10):
@@ -300,18 +288,11 @@ def makeCubeFloor(app, event, thickness=10):
         e1 = graph2Vecs(app, [firstPoint])[0]
         app.cubeFloorVecs = np.append(app.cubeFloorVecs, [e1], axis=0)
         app.cubeFloorVecs = np.append(app.cubeFloorVecs, [e1+th], axis=0)
-        for i in range(4):
-            app.tempCubeFloorVecs = np.append(app.tempCubeFloorVecs, [e1], axis=0)
-            app.tempCubeFloorVecs = np.append(app.tempCubeFloorVecs, [e1+th], axis=0)
-        app.tempCubeFloorCoords = vecs2Graph(app, app.tempCubeFloorVecs)
-
-        #app.tempCOFloor = Cube(0,0,thickness, e1) 
 
     elif app.cubeFloorVecs.shape[0] == 2: #rows 
         secondPoint = np.array([event.x, event.y])
         e2 = graph2Vecs(app, [secondPoint])[0]
         e1 = app.cubeFloorVecs[0]
-
         e3 = np.array([e2[0], e1[1], 0])
         e4 = np.array([e1[0], e2[1], 0])
         for vec in [e2, e3, e4]:
@@ -319,15 +300,7 @@ def makeCubeFloor(app, event, thickness=10):
             app.cubeFloorVecs = np.append(app.cubeFloorVecs, [vec+th], axis=0)
 
         app.cubeFloorCoords = vecs2Graph(app, app.cubeFloorVecs)
-        for vec in [e2, e3, e2, e3]:
-            app.tempRightCubeWallVecs = np.append(app.tempRightCubeWallVecs, [vec], axis=0)
-            app.tempRightCubeWallVecs = np.append(app.tempRightCubeWallVecs, [vec + np.array([-10,0,0])], axis=0)
-            #rw
-        for vec in [e1, e3, e2, e3]:
-            app.tempLeftCubeWallVecs = np.append(app.tempLeftCubeWallVecs, [vec], axis=0)
-            app.tempLeftCubeWallVecs = np.append(app.tempLeftCubeWallVecs, [vec + np.array([0,-10,0])], axis=0)
-            #lw 
-        
+
         l = abs(e1[0]-e2[0])
         w = abs(e1[1]-e2[1])
         h = thickness 
@@ -341,12 +314,6 @@ def floatCubeFloor(app, event, thickness=10):
     e2 = graph2Vecs(app, np.array([[event.x, event.y]]))[0] #(origin + [0,width,0])
     e1 = app.cubeFloorVecs[0] #(origin + [length, 0,0])
     e3 = np.array([e2[0], e1[1], 0]) #(origin)
-    e4 = np.array([e1[0], e2[1], 0])
-    vecs2Add = [e2, e2+th, e3, e3+th, e4, e4+th]
-    for i in range(2, 8):
-        app.tempCubeFloorVecs[i] = vecs2Add[i-2]
-    #print(app.tempCubeFloorVecs)
-    app.tempCubeFloorCoords = vecs2Graph(app, app.tempCubeFloorVecs) 
 
     length = (e1 - e3)[0] #origin + [length,0,0] - origin 
     width = (e2 - e3)[1] #origin + [0,width,0] - origin 
@@ -355,27 +322,8 @@ def floatCubeFloor(app, event, thickness=10):
 
 def floatCubeWalls(app, event):
     h = app.cubeFloorCoords[3][1]-event.y #height 
-    
-    rwVecs = [app.cubeFloorVecs[2], app.cubeFloorVecs[4]] 
 
-    for i in range(len(rwVecs)):
-        app.tempRightCubeWallVecs[i] = rwVecs[i] #origin? 
-        app.tempRightCubeWallVecs[i+2] = rwVecs[i] + np.array([0,0,h])
-        app.tempRightCubeWallVecs[i+4] = rwVecs[i] + np.array([[-10,0,0]]) #origin
-        app.tempRightCubeWallVecs[i+6] = rwVecs[i] + np.array([[-10,0,h]])
-    
-    app.tempRightCubeWallCoords = vecs2Graph(app, app.tempRightCubeWallVecs)
-
-    lwVecs = [app.cubeFloorVecs[0], app.cubeFloorVecs[4]]
-    for i in range(len(lwVecs)):
-        app.tempLeftCubeWallVecs[i] = lwVecs[i]
-        app.tempLeftCubeWallVecs[i+2] = lwVecs[i] + np.array([0,0,h])
-        app.tempLeftCubeWallVecs[i+4] = lwVecs[i] + np.array([0,-10,0])
-        app.tempLeftCubeWallVecs[i+6] = lwVecs[i] + np.array([0,-10,h])
-
-    app.tempLeftCubeWallCoords = vecs2Graph(app, app.tempLeftCubeWallVecs)
-
-    #making Cube objects of walls for rendering 
+    #making temp Cube objects of walls 
     rl = app.COFloor.height
     rw = app.COFloor.width
     rh = h
@@ -394,16 +342,12 @@ def makeCubeWalls(app, event):
     app.cubeWallHeight = app.cubeFloorCoords[3][1]-event.y
     
     #replace magic nums with custom height
+    '''
     for vec in [app.cubeFloorVecs[2], app.cubeFloorVecs[4]]:
         app.rightCubeWallVecs = np.append(app.rightCubeWallVecs, [vec], axis=0)
         app.rightCubeWallVecs = np.append(app.rightCubeWallVecs, [vec + np.array([0,0,app.cubeWallHeight])], axis=0)
         app.rightCubeWallVecs = np.append(app.rightCubeWallVecs, [vec + np.array([-10,0,0])], axis=0)
-        app.rightCubeWallVecs = np.append(app.rightCubeWallVecs, [vec + np.array([-10,0,app.cubeWallHeight])], axis=0) 
-
-        app.tempRightCubeWallVecs = np.append(app.tempRightCubeWallVecs, [vec], axis=0)
-        app.tempRightCubeWallVecs = np.append(app.tempRightCubeWallVecs, [vec + np.array([-10,0,0])], axis=0)
-        app.tempRightCubeWallVecs = np.append(app.tempRightCubeWallVecs, [vec], axis=0)
-        app.tempRightCubeWallVecs = np.append(app.tempRightCubeWallVecs, [vec + np.array([-10,0,0])], axis=0)  
+        app.rightCubeWallVecs = np.append(app.rightCubeWallVecs, [vec + np.array([-10,0,app.cubeWallHeight])], axis=0)  
 
     app.rightCubeWallCoords = vecs2Graph(app, app.rightCubeWallVecs)
 
@@ -411,21 +355,15 @@ def makeCubeWalls(app, event):
         app.leftCubeWallVecs = np.append(app.leftCubeWallVecs, [vec], axis=0)
         app.leftCubeWallVecs = np.append(app.leftCubeWallVecs, [vec + np.array([0,0,app.cubeWallHeight])], axis=0)
         app.leftCubeWallVecs = np.append(app.leftCubeWallVecs, [vec + np.array([0,-10,0])], axis=0)
-        app.leftCubeWallVecs = np.append(app.leftCubeWallVecs, [vec + np.array([0,-10,app.cubeWallHeight])], axis=0)
-
-        app.tempLeftCubeWallVecs = np.append(app.tempLeftCubeWallVecs, [vec], axis=0)
-        app.tempLeftCubeWallVecs = np.append(app.tempLeftCubeWallVecs, [vec + np.array([0,-10,0])], axis=0)
-        app.tempLeftCubeWallVecs = np.append(app.tempLeftCubeWallVecs, [vec], axis=0)
-        app.tempLeftCubeWallVecs = np.append(app.tempLeftCubeWallVecs, [vec + np.array([0,-10,0])], axis=0)  
+        app.leftCubeWallVecs = np.append(app.leftCubeWallVecs, [vec + np.array([0,-10,app.cubeWallHeight])], axis=0) 
 
     app.leftCubeWallCoords = vecs2Graph(app, app.leftCubeWallVecs)
-
-    #making Cube objects of walls for rendering 
+    '''
+    #making Cube objects of walls 
     rl = app.COFloor.height
     rw = app.COFloor.width
     rh = app.cubeWallHeight
     rx,ry,rz = app.COFloor.origin[0]-rl, app.COFloor.origin[1], 0 
-
     app.CORW = Cube(rl, rw, rh, (rx, ry, rz))
     
     ll = app.COFloor.length
@@ -433,12 +371,6 @@ def makeCubeWalls(app, event):
     lh = app.cubeWallHeight
     lx,ly,lz = app.COFloor.origin[0], app.COFloor.origin[1]-lw, 0
     app.COLW = Cube(ll, lw, lh, (lx,ly,lz))
-
-    #app.COFloorImageCoords = perspectiveRender(app, app.cameraBasis, app.COFloor.vecs)
-    #app.CORWImageCoords = perspectiveRender(app, app.cameraBasis, app.CORW.vecs)
-    #app.COLWImageCoords = perspectiveRender(app, app.cameraBasis, app.COLW.vecs)
-
-    #app.CORW.width
 
 def mousePressed(app, event): 
     if app.helpButton.mouseOver(app, event):
@@ -451,13 +383,13 @@ def mousePressed(app, event):
         resetDrawCubeFloor(app)
         resetFurniture(app)
 
-    elif app.drawCubeFloor and app.cubeFloorCoords.shape[0]<8 and app.rotationAngle==0:
+    elif app.drawCubeFloor and not app.rotate and not isinstance(app.COFloor, Cube):
         makeCubeFloor(app, event)
 
-    elif app.cubeFloorCoords.shape[0]==8 and app.cubeWallHeight==None:
+    elif isinstance(app.COFloor, Cube) and app.cubeWallHeight == None:
         makeCubeWalls(app, event)
 
-    elif not app.view and not app.helpScreen and app.leftTurnButton.mouseOver(app, event):
+    elif not app.view and not app.helpScreen and app.leftTurnButton.mouseOver(app, event) and app.drawCubeFloor:
         app.rotate = not app.rotate
         if not app.rotate:
             while app.rotationAngle!=0:
@@ -467,7 +399,8 @@ def mousePressed(app, event):
     elif not app.view and not app.helpScreen and app.cameraButton.mouseOver(app, event):
         app.showCamera = not app.showCamera
 
-    elif not app.view and app.drawCubeFloor and app.rightCubeWallVecs.shape[0]==8 and not app.rotate:
+    elif not app.view and app.drawCubeFloor and isinstance(app.CORW, Cube) and not app.rotate:
+        #app.rightCubeWallVecs.shape[0]==8 and not app.rotate:
         
         origin = graph2Vecs(app, [[event.x, event.y]], z=app.COFloor.height)[0]
 
@@ -539,7 +472,7 @@ def mousePressed(app, event):
     print(v)
 
 def mouseDragged(app, event):
-    if (not app.view and app.drawCubeFloor and app.rightCubeWallVecs.shape[0]==8 
+    if (not app.view and app.drawCubeFloor and isinstance(app.CORW, Cube)#app.rightCubeWallVecs.shape[0]==8 
         and app.rotationAngle==0 and app.newFurniture!=None):
         o = graph2Vecs(app, [[event.x, event.y]], z=app.COFloor.height)[0]
 
@@ -579,7 +512,7 @@ def fitFurnitureInFloor(app, furniture, floor):
 
 def mouseReleased(app, event):
 
-    if (not app.view and app.drawCubeFloor and app.rightCubeWallVecs.shape[0]==8 
+    if (not app.view and app.drawCubeFloor and isinstance(app.CORW, Cube)#app.rightCubeWallVecs.shape[0]==8 
         and app.rotationAngle == 0 and (app.chairButton.isPressed or app.tableButton.isPressed)):
         ox2, oy2, oz2 = fitFurnitureInFloor(app, app.newFurniture, app.COFloor)
         l2, w2, h2 = app.newFurniture.length, app.newFurniture.width, app.newFurniture.height
@@ -766,7 +699,7 @@ def redrawAll(app, canvas):
         ox, oy = app.origin
 
         #walls (static)
-        if app.drawCubeFloor and app.cubeFloorVecs.shape[0]==8 and app.rightCubeWallCoords.shape[0]==8:
+        if app.drawCubeFloor and app.cubeFloorVecs.shape[0]==8 and isinstance(app.CORW, Cube):#app.rightCubeWallCoords.shape[0]==8:
             app.CORW.draw(app, canvas, 'black')
             app.COLW.draw(app, canvas, 'black')
             #renderCube(app, canvas, app.COLW)
@@ -774,10 +707,8 @@ def redrawAll(app, canvas):
         
         #walls (moving)
         elif app.drawCubeFloor and app.cubeFloorVecs.shape[0]==8 and app.cubeWallHeight==None and isinstance(app.tempCORW, Cube):
-            #drawCube(app, canvas, app.tempRightCubeWallCoords, 'red')
             app.tempCORW.draw(app, canvas, 'red')
             app.tempCOLW.draw(app, canvas, 'red')
-            #drawCube(app, canvas, app.tempLeftCubeWallCoords, 'red')
 
         #cube floor (static)
         if app.drawCubeFloor and app.cubeFloorVecs.shape[0]==8:
@@ -786,7 +717,6 @@ def redrawAll(app, canvas):
 
         #cube floor (moving)
         if app.drawCubeFloor and app.cubeFloorVecs.shape[0]==2 and isinstance(app.tempCOFloor, Cube):
-            #drawCube(app, canvas, app.tempCubeFloorCoords, 'red')
             app.tempCOFloor.draw(app, canvas, 'red')
 
         #draw furniture

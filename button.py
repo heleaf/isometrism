@@ -5,23 +5,26 @@ from cube import *
 from newbasis import *
 
 class Button(object):
-    def __init__(self, origin, w, h, padding=10, fillColor='white', lineColor='black'):
+    def __init__(self, origin, w, h, padding=10,
+                iconName=None, ovec=None, app=None,
+                fillColor='white', lineColor='black'):
         self.w = w
         self.h = h 
         self.fillColor = fillColor
         self.lineColor = lineColor
         self.padding = padding
         self.origin = origin
-        self.iconName = None
-        self.icon = None
         self.isPressed = False
+        self.setIcon(iconName, ovec=ovec, app=app)
 
     def mouseOver(self, app, event):
         ox,oy = self.origin 
         w,h = self.w, self.h
         return ox-w/2 <= event.x <= ox+w/2 and oy-h/2 <= event.y <= oy+h/2
 
-    def setIcon(self, ovec, iconName):
+    def setIcon(self, iconName, ovec=None, app=None):
+        if ovec == True:
+            ovec = graph2Vecs(app, [self.origin])[0]
         if iconName == 'Chair':
             length = width = (self.w - (self.padding*2))/4
             height = self.h - (self.padding*2)
@@ -29,7 +32,6 @@ class Button(object):
             ovec[2] -= self.h*0.2
             self.icon = [Chair(length, width, height, ovec, tableThickness = th, legThickness=th)]
             self.iconName = iconName
-
         elif iconName == 'Table':
             ovec[1] -= self.h*0.2
             ovec[2] -= self.h*0.1
@@ -39,13 +41,11 @@ class Button(object):
             th = min(self.w, self.h)*0.02
             self.icon = [Table(length, width, height, ovec, tableThickness=th, legThickness=th)]
             self.iconName = iconName
-
         elif iconName == 'Cube':
             length = width = (self.w - (self.padding*2))/4
             height = self.h - (self.padding*2)
             self.icon = [Cube(length, width, height, ovec)] 
             self.iconName = iconName
-
         elif iconName == 'Room':
             fl = fw = (self.w - self.padding*2)/2
             fh = min(self.w, self.h)*0.02 
@@ -65,7 +65,7 @@ class Button(object):
             r = (min(self.w, self.h) - self.padding*2 )/2
             self.icon = [MiscIcon(r, self.origin, name=iconName)]
             self.iconName = iconName
-
+        
         else:
             self.icon = None
             self.iconName = None
