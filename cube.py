@@ -3,7 +3,6 @@ from threedimfunctions import *
 from newbasis import *
 
 class Cube(object):
-    refs = set()
     currentId = 0
     def __init__(self, length, width, height, origin=(0,0,0)):
         self.length = length
@@ -242,18 +241,13 @@ class Cube(object):
 class Table(Cube):
     tableThickness = 5
     legThickness = 3
-    refs = set()
     currentId = 0
     def __init__(self, length, width, height, origin=(0,0,0),
                 tableThickness=5, 
                 legThickness=3):
-        self.length = length
-        self.width = width
-        self.height = height 
-
-        l = self.length
-        w = self.width
-        h = self.height
+        l = self.length = length
+        w = self.width = width
+        h = self.height = height 
         th = self.tth = tableThickness
         t = self.lth = legThickness
 
@@ -310,21 +304,6 @@ class Table(Cube):
         for cube in self.cubes:
             cube.rotateSelf(app, angle, center, rotAxis)
         self.hitBoxVecs = self.hitBox.findHitBoxVecs()
-
-        '''
-        for i in range(len(self.cubes)):
-            cube = self.cubes[i]
-            faceVecs = cube.getFaceVecs()
-            for j in range(len(faceVecs)):
-                face = faceVecs[j]
-                coords = perspectiveRender(app, app.cameraBasis, face)
-                self.imageCoords[i+j] = coords
-        '''
-        #faceVecs = self.getFaceVecs()
-        #for i in range(len(faceVecs)):
-        #    face = faceVecs[i]
-        #    coords = perspectiveRender(app, app.cameraBasis, face)
-        #    self.imageCoords[i] = coords
     
     def isCollide(self, other):
         if not isinstance(other, Cube):
@@ -342,7 +321,6 @@ class Table(Cube):
             return False
 
 class Chair(Table):
-    refs = set()
     currentId = 0
     def __init__(self, length, width, height, origin=(0,0,0), tableThickness=5, 
                 legThickness=3):
@@ -363,3 +341,70 @@ class Chair(Table):
                      legThickness=self.lth)
         self.id -= 1 
         Chair.currentId -=1
+
+class Bed(Table):
+    currentId = 0
+    def __init__(self, length, width, height, origin=(0,0,0), tth=None, lth=None):
+        l = self.length = length
+        w = self.width = width
+        h = self.height = height 
+        self.tth = tth
+        self.lth = lth
+        self.origin = np.array(origin)
+        self.center = self.origin + np.array([l/2, w/2, h/2])
+        self.headBoard = Cube(l,w*0.2, h, self.origin)
+        bodyO = self.origin + np.array([0,w*0.2,0])
+        self.body = Cube(l,w*0.8,h*0.8,bodyO)
+        pillowHeight = h*0.2
+        pillowO = bodyO + np.array([l*.25, 0, h*0.8])
+        self.pillow = Cube(l*0.5, l/2, pillowHeight, origin=pillowO)
+        self.cubes = [self.headBoard, self.body, self.pillow]
+
+        self.hitBox = Cube(l,w,h, origin=self.origin)
+        self.hitBoxVecs = self.hitBox.findHitBoxVecs()
+        self.id = Bed.currentId
+        Bed.currentId+=1
+        self.name = 'Bed'
+        self.isClicked = False
+
+    def updateVecs(self):
+        self = Bed(self.length, self.width, self.height, 
+                     origin=self.origin)
+        self.id -= 1 
+        Table.currentId -=1
+
+class Lamp(Table):
+    currentId = 0
+    def __init__(self, length, width, height, origin=(0,0,0), 
+                            tableThickness=5, legThickness=2):
+        l = self.length = length
+        w = self.width = width
+        h = self.height = height 
+        tth = self.tth = tableThickness
+        lth = self.lth = legThickness
+        self.origin = np.array(origin)
+        self.center = self.origin + np.array([l/2, w/2, h/2])
+
+        botBaseO = self.origin + np.array([l*0.2, w*0.2, 0])
+        self.botBase = Cube(l*0.6,w*0.6,tth, botBaseO)
+        stemO = self.origin + np.array([(l-lth)/2,(w-lth)/2,tth])
+        self.stem = Cube(lth,lth, h-2*tth-0.3*h, origin=stemO)
+        topBaseO = self.origin + np.array([0,0,h-2*tth-0.3*h+tth])
+        self.topBase = Cube(l,w,tth, origin=topBaseO)
+        topBoxO = topBaseO + np.array([l*0.1, w*0.1, tth])
+        self.topBox = Cube(l*0.8, w*0.8, h*0.3, origin=topBoxO)
+        
+        self.cubes = [self.botBase, self.stem, self.topBase, self.topBox]
+
+        self.hitBox = Cube(l,w,h, origin=self.origin)
+        self.hitBoxVecs = self.hitBox.findHitBoxVecs()
+        self.id = Lamp.currentId
+        Lamp.currentId+=1
+        self.name = 'Lamp'
+        self.isClicked = False
+
+    def updateVecs(self):
+        self = Lamp(self.length, self.width, self.height, 
+            origin=self.origin, tableThickness=self.tth, legThickness=self.lth)
+        self.id -= 1 
+        Lamp.currentId -=1
