@@ -94,41 +94,55 @@ def makeCameraBases(app, cameraOrigin=np.array([0,30,60]), imageDistance=35, ima
     app.cameraImageAlts = [app.imageCoordsFront, app.imageCoordsRight, app.imageCoordsBack, app.imageCoordsLeft]
 
 def initializeButtons(app):
-    o = (100,60)
+    o = (80,60)
     app.roomButton = Button(o, 60,50, padding=10, iconName='Room', 
                                         ovec=True, app=app)
 
-    o = (180,60)
+    o = (160,60)
     app.chairButton = Button(o, 60,50, padding = 10, iconName='Chair', 
                                         ovec=True, app=app)
 
-    o = (260,60)
+    o = (240,60)
     app.tableButton = Button(o, 60,50, padding =10, iconName='Table', 
                                         ovec=True, app=app)
 
-    o = (90, app.height-90)
+    o = (80, app.height-90)
     app.cameraButton = Button(o, 60,60, padding=10, iconName='Camera', 
                                         ovec=True, app=app)
+                                        
+    o = (80+50, app.height-80)
+    app.cameraLeftButton = Button(o,20,40, padding=5, iconName = 'Left Arrow')
 
-    o = (app.width-100-180, app.height-80)
+    o = (80+50+20, app.height-80)
+    app.cameraRightButton = Button(o,20,40,padding=5, iconName = 'Right Arrow')
+
+    
+    #o = (app.width-100-180, app.height-80)
+    #o = (70, app.height/2)
+    #o = (app.width-70-50, app.height-80-50)
+    #o = (app.width-70-50, 50)
+    o = (app.width/2 - 20, app.height-80)
     app.leftTurnButton = Button(o, 40,40, padding=10, iconName='Left Turn')
 
-    o = (app.width-100-120, app.height-80)
+    #o = (app.width-100-120, app.height-80)
+    #o = (app.width-70, app.height-80-50)
+    #o = (app.width-70, 50)
+    o = (app.width/2 +20, app.height-80)
     app.rightTurnButton = Button(o, 40,40, padding=10, iconName='Right Turn')
 
-    o = (app.width-100-60, app.height-80)
+    o = (app.width-70-50, app.height-80)
     app.viewButton = Button(o, 40,40, padding=10, iconName='Eye')
 
-    o = (app.width-100, app.height-80)
+    o = (app.width-70, app.height-80)
     app.helpButton = Button(o, 40,40, padding=10, iconName='Help')
 
     #make a titlePageButton
 
     app.buttons = [app.roomButton, app.chairButton, app.tableButton, 
-                   app.leftTurnButton, app.rightTurnButton, app.cameraButton, app.viewButton, 
+                   app.leftTurnButton, app.rightTurnButton, app.cameraButton, app.cameraLeftButton, app.cameraRightButton, app.viewButton, 
                    app.helpButton]
     app.editButtons = [app.roomButton, app.chairButton, app.tableButton, 
-                       app.leftTurnButton, app.rightTurnButton, app.cameraButton, app.viewButton] 
+                       app.leftTurnButton, app.rightTurnButton, app.cameraButton, app.cameraLeftButton, app.cameraRightButton, app.viewButton] 
     app.furnitureButtons = [app.chairButton, app.tableButton]
 
 def resetDrawCubeFloor(app, init=False):
@@ -610,7 +624,6 @@ def redrawAll(app, canvas):
         app.helpButton.draw(app, canvas, app.helpButton.fillColor, app.helpButton.lineColor)
 
     elif app.view:
-        #here's our view window
         if app.showCamera:
             canvas.create_rectangle(0,0,app.width, app.height, fill='pink')
         

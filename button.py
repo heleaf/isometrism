@@ -66,11 +66,18 @@ class Button(object):
             self.icon = [MiscIcon(r, self.origin, name=iconName, ovec=ovec)]
             self.iconName = iconName
         
-        elif (iconName == 'Left Turn' or iconName == 'Right Turn' or 
+        elif (iconName == 'Left Turn' or iconName == 'Right Turn' or
+            #iconName == 'Left Arrow' or iconName == 'Right Arrow' or
             iconName == 'Help' or iconName == 'Eye'):
             r = (min(self.w, self.h) - self.padding*2 )/2
             self.icon = [MiscIcon(r, self.origin, name=iconName)]
             self.iconName = iconName
+
+        elif iconName == 'Left Arrow' or iconName == 'Right Arrow':
+            r = min(self.w, self.h) - self.padding*2.5
+            self.icon = [MiscIcon(r, self.origin, name=iconName)]
+            self.iconName = iconName
+
         
         else:
             self.icon = None
@@ -105,6 +112,15 @@ class MiscIcon(object):
             canvas.create_arc(ox-r, oy-(r*0.7), ox+r, oy+(r*0.8), start=120, extent=60, fill=None, outline=fillColor, width=self.lineWidth*1.8)
             canvas.create_line(ox-r*0.5, oy-(r*0.7), ox+r*0.2, oy-r, fill=lineColor, width=self.lineWidth)
             canvas.create_line(ox-r*0.5, oy-(r*0.7), ox+r*0.2, oy-(r*0.3), fill=lineColor, width=self.lineWidth)
+
+        elif self.name == 'Right Arrow':
+            canvas.create_text(ox,oy-r, text='>', fill=lineColor)
+            canvas.create_text(ox,oy+r, text='g', fill=lineColor)
+
+        elif self.name == 'Left Arrow': 
+            canvas.create_text(ox,oy-r, text='<', fill=lineColor)
+            canvas.create_text(ox,oy+r, text='f', fill=lineColor)
+
         elif self.name == 'Help':
             canvas.create_polygon(ox-r*0.2, oy-r, ox+r*0.2, oy-r, ox+r*0.1, oy+r*0.2, ox-r*0.1, oy+r*0.2, fill=lineColor, width=0)
             cy = oy + r*0.6
@@ -143,7 +159,6 @@ class MiscIcon(object):
                     canvas.create_text(x0,y0, text='w', fill=lineColor, anchor=S)
                     canvas.create_text(x1,y1, text='s', fill=lineColor, anchor=N)
             
-        
         elif self.name == 'Eye':
             canvas.create_polygon(ox-r*1.2,oy, ox,oy-r, ox+r*1.2,oy, ox,oy+r, fill=lineColor, outline=lineColor, width=self.lineWidth)
             sr = r*0.5
