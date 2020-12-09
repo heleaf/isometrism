@@ -283,3 +283,117 @@ def initialize(app):
     #imageTopRight = imageTopLeft + np.array([-imageLength, 0,0])
     #imageBotLeft = imageTopLeft + np.array([0,0,-imageHeight])
     #imageBotRight = imageTopLeft + np.array([-imageLength, 0, -imageHeight])
+
+
+    def renderCube(app, canvas, cube):
+    topFaceVecs = []
+    for i in cube.topFaceVecs:
+        topFaceVecs.append(cube.vecs[i])
+    
+    leftFrontFaceVecs = []
+    for i in cube.leftFrontFaceVecs:
+        leftFrontFaceVecs.append(cube.vecs[i])
+    
+    rightFrontFaceVecs = []
+    for i in cube.rightFrontFaceVecs:
+        rightFrontFaceVecs.append(cube.vecs[i])
+
+    leftBackFaceVecs = []
+    for i in cube.leftBackFaceVecs:
+        leftBackFaceVecs.append(cube.vecs[i])
+    
+    rightBackFaceVecs = []
+    for i in cube.rightBackFaceVecs:
+        rightBackFaceVecs.append(cube.vecs[i])
+
+    botFaceVecs = []
+    for i in cube.botFaceVecs:
+        botFaceVecs.append(cube.vecs[i])
+
+    t = topFaceCoords = vecs2Graph(app, topFaceVecs)
+    lf = leftFrontFaceCoords = vecs2Graph(app, leftFrontFaceVecs)
+    rf = rightFrontFaceCoords = vecs2Graph(app, rightFrontFaceVecs)
+    lb = leftBackFaceCoords = vecs2Graph(app, leftBackFaceVecs)
+    rb = rightBackFaceCoords = vecs2Graph(app, rightBackFaceVecs)
+    b = botFaceCoords = vecs2Graph(app, botFaceVecs)
+
+    #print(rightBackFaceVecs)
+    
+    #if rb[1][1]>rb[0][1] and rb[2][0]>rb[0][0]:
+    #    canvas.create_polygon(t[0][0], t[0][1], t[1][0], t[1][1], t[3][0], t[3][1], t[2][0], t[2][1],fill='yellow')
+    #    canvas.create_polygon(rf[0][0], rf[0][1], rf[1][0], rf[1][1], rf[3][0], rf[3][1], rf[2][0], rf[2][1],fill='red') 
+    #    canvas.create_polygon(rb[0][0], rb[0][1], rb[1][0], rb[1][1], rb[3][0], rb[3][1], rb[2][0], rb[2][1],fill='orange')
+    #else:
+    canvas.create_polygon(t[0][0], t[0][1], t[1][0], t[1][1], t[3][0], t[3][1], t[2][0], t[2][1],fill='yellow')
+    canvas.create_polygon(lf[0][0], lf[0][1], lf[1][0], lf[1][1], lf[3][0], lf[3][1], lf[2][0], lf[2][1],fill='orange')
+    canvas.create_polygon(rf[0][0], rf[0][1], rf[1][0], rf[1][1], rf[3][0], rf[3][1], rf[2][0], rf[2][1],fill='red') 
+
+def drawCube(app, canvas, cubeCoords, color='black'):
+    for i in range(cubeCoords.shape[0]):
+        p1 = cubeCoords[i]
+        for j in range(cubeCoords.shape[0]):
+            p2 = cubeCoords[j]
+            canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill=color)
+
+def drawCubeOutline(app, canvas, cube, color='black'):
+    topFaceVecs = []
+    for i in cube.topFaceVecs:
+        topFaceVecs.append(cube.vecs[i])
+    
+    leftFrontFaceVecs = []
+    for i in cube.leftFrontFaceVecs:
+        leftFrontFaceVecs.append(cube.vecs[i])
+    
+    rightFrontFaceVecs = []
+    for i in cube.rightFrontFaceVecs:
+        rightFrontFaceVecs.append(cube.vecs[i])
+
+    leftBackFaceVecs = []
+    for i in cube.leftBackFaceVecs:
+        leftBackFaceVecs.append(cube.vecs[i])
+    
+    rightBackFaceVecs = []
+    for i in cube.rightBackFaceVecs:
+        rightBackFaceVecs.append(cube.vecs[i])
+
+    botFaceVecs = []
+    for i in cube.botFaceVecs:
+        botFaceVecs.append(cube.vecs[i])
+
+    t = topFaceCoords = vecs2Graph(app, topFaceVecs)
+    lf = leftFrontFaceCoords = vecs2Graph(app, leftFrontFaceVecs)
+    rf = rightFrontFaceCoords = vecs2Graph(app, rightFrontFaceVecs)
+    lb = leftBackFaceCoords = vecs2Graph(app, leftBackFaceVecs)
+    rb = rightBackFaceCoords = vecs2Graph(app, rightBackFaceVecs)
+    b = botFaceCoords = vecs2Graph(app, botFaceVecs)
+
+    for r in [t,lf,rf,lb,rb,b]:
+        canvas.create_line(r[0][0], r[0][1], r[1][0], r[1][1], fill=color)
+        canvas.create_line(r[1][0],r[1][1], r[3][0], r[3][1], fill=color)
+        canvas.create_line(r[3][0], r[3][1], r[2][0], r[2][1], fill=color)
+        canvas.create_line(r[2][0],r[2][1], r[0][0], r[0][1], fill=color)
+        #canvas.create_polygon(r[0][0], r[0][1], r[1][0], r[1][1], r[3][0], r[3][1], r[2][0], r[2][1], fill=None, outline=color)
+
+    #canvas.create_polygon(t[0][0], t[0][1], t[1][0], t[1][1], t[3][0], t[3][1], t[2][0], t[2][1],fill=None)
+
+
+def rotateRenderedWalls(app):
+    app.CORW.vecs = rotateCube(app, app.CORW.vecs, 10)
+
+    #print('after')
+    #print(app.CORW.rightBackFaceVecs) #[0, 2, 3, 6]
+    #print(app.CORW.vecs)
+    print(app.rightCubeWallCoords)
+    
+    maxVal = max(app.rightCubeWallCoords[:,0])
+    minVal = min(app.rightCubeWallCoords[:,0])
+    #print(val)
+    
+    if maxVal == app.rightCubeWallCoords[-1][0]: #good for detecting initial turn 
+        print('we need right back')
+    elif minVal!=app.rightCubeWallCoords[-1][0]: #good for detecting end of turn
+        print('we still need right back')
+    else:
+        print('nope')
+
+    app.COLW.vecs = rotateCube(app, app.COLW.vecs, 10)
