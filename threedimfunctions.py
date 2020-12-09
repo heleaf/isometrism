@@ -1,14 +1,19 @@
+#threedimfunctions 
+#   - functions used for transitioning between 3D vectors <-> tkinter
+#   - functions for perspective rendering vectors and 3D rotation 
+
 import numpy as np
 import math
 
 def deg2Rad(deg): return deg*math.pi/180
 
-#regular graph coordinate --> tkinter x coordinate
+#regular graph coordinate (with origin at 0,0) --> tkinter x coordinate
 def g2x(x, originX): return x+originX
 
-#regular graph coordinate --> tkinter y coordinate
+#regular graph coordinate (with origin at 0,0) --> tkinter y coordinate
 def g2y(y, originY): return originY-y
 
+#calculates tkinter (x,y) equivalent of 3D vectors
 def vecs2Graph(app, vecs): 
     #takes in 2d ndarray of vecs [x,y,z]
     #returns a 2d ndarray of Tkinter coordinates [x,y]
@@ -19,14 +24,16 @@ def vecs2Graph(app, vecs):
         tx = vec[0]*math.cos(app.xAxisAngle) + vec[1]*(math.cos(app.yAxisAngle))
         #adding the vertical components of the vectors 
         ty = vec[0]*math.sin(app.xAxisAngle) + vec[1]*(math.sin(app.yAxisAngle)) + vec[2]
-        #offset to the origin
+        
+        #offsets, since prev tx,ty consider 0,0 to be center of the screen 
         tx = g2x(tx, app.origin[0])
         ty = g2y(ty, app.origin[1])
+
         newPoint = np.array([[tx,ty]])
         graphPoints = np.append(graphPoints, newPoint, axis=0)
-
     return graphPoints
 
+#calculates 3D vector (x,y,z) equivalent of tkinter coordinates 
 def graph2Vecs(app, graph, z=0): 
     #takes in 2d ndarray of TKinter coordinates [x,y]
     #returns a 2d ndarray of vecs [x,y,z]
@@ -74,6 +81,7 @@ def graph2Vecs(app, graph, z=0):
 
     return vecs
 
+#rotate a vector in 3D space around an axis 
 def rotateVec(app, vec, angle, axis): 
     #rotation matrix adapted from 
     #https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/rotate3d()
@@ -107,22 +115,38 @@ def rotateVec(app, vec, angle, axis):
     rotatedVec = R @ vec
     return rotatedVec
 
+#calculate the perspective rendered coordinates of cube vectors 
 def perspectiveRender(app, cameraBasis, cubeVectors): 
-    #concepts lifted from Professor Offner's 21-241 perspective rendering lectures
+    #concepts lifted from Prof. Offner's 21-241 perspective rendering lectures
 
-    #takes in: cameraOrigin(vector), 
+    #takes in: cameraOrigin (vector of camera location), 
     #          cameraBasis (matrix w/ columns as vectors of camera's basis)
     #          cubeVectors (matrix w/ vectors as rows)
     #returns:  matrix of coordinates to render (coordinates as rows)
 
-    #get new basis of cubeVectors (matrix w/ vectors as columns)
     numVecs = cubeVectors.shape[0]
+
+    #use 'change of coordinates' to get a new basis of cubeVectors 
+    # note: the cubeVector locations have not changed, 
+    # but they are expressed now in terms of the camera's basis 
+    # instead of the standard basis for R^3.
+    #the new basis of cubeVectors is a matrix w/ vectors as columns
     cameraViewCubeVecs = np.linalg.inv(cameraBasis) @ cubeVectors.T
 
     imgCoords = np.zeros((numVecs,2)) #rows of (x,y) coordinates for Tkinter
-    for i in range(cameraViewCubeVecs.shape[1]): #loop through the vecs (columns)
-        divisor = cameraViewCubeVecs[:,i][2] #the third element in the column of a vector
-        cameraViewCubeVecs[:,i] *= 1/(divisor) #scale down to get points in the image plane 
-        imgCoords[i] = -cameraViewCubeVecs[:2, i] #get the first two components (pixel addresses)
+
+    #loop through the vecs (columns)
+    for i in range(cameraViewCubeVecs.shape[1]): 
+        #the third element in the column of a vector
+        divisor = cameraViewCubeVecs[:,i][2] 
+
+        #since the image plane is exactly one v3 (third vector of camera basis)
+        # away from the camera, we scale each vector by 1/divisor 
+        # to get the vectors that lie on the image plane 
+        cameraViewCubeVecs[:,i] *= 1/(divisor) 
+
+        #now the first two components of each vector are the pixel addresses 
+        # of the perspective rendered coordinates of the vector 
+        imgCoords[i] = -cameraViewCubeVecs[:2, i] 
 
     return imgCoords

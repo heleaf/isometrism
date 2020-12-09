@@ -1,21 +1,24 @@
+#cube 
+#   - Cube class and its subclasses (Table, Chair, Bed, Lamp)
+#   - key methods: self rotation
+#                  collision detection
+#                  perspective rendering
+#                  draw
+
 import numpy as np
 from threedimfunctions import *
 from newbasis import *
 
 class Cube(object):
-    currentId = 0
+    currentId = 0 #number of cubes created
     def __init__(self, length, width, height, origin=(0,0,0)):
-        self.length = length
-        self.width = width
-        self.height = height 
+        l = self.length = length
+        w = self.width = width
+        h = self.height = height 
 
         self.origin = origin
         
         self.name = 'Cube'
-
-        l = self.length
-        w = self.width
-        h = self.height
 
         self.center = self.origin + np.array([l/2, w/2, h/2])
         self.isClicked = False
@@ -32,7 +35,6 @@ class Cube(object):
                             [0,w,h],
                             [l,w,h]])
 
-        #if origin!=None: 
         for i in range(self.vecs.shape[0]):
             self.vecs[i] = self.vecs[i]+np.array(self.origin)
 
@@ -57,27 +59,24 @@ class Cube(object):
             if self.vecs[i][2] == self.origin[2]:
                 self.botFaceVecs.append(i)
     
+    #rotates all cube vectors around an axis 
     def rotate(self, app, angle, rotAxis=(0,0,1)):
-
-        #def rotateCube(app, cube, angle, rotAxis=(0,0,1)): 
-        #rotates all the vectors in a cube around an axis
         newCubeVecs = np.empty((0,3))
-
         for i in range(self.vecs.shape[0]):
             vec = self.vecs[i]
             if vec[0]==vec[1]==vec[2]==0:
                 rotatedVec = vec
             else:
                 rotatedVec = rotateVec(app, vec, 10, rotAxis)
-            #self.vecs[i] = rotatedVec
             newCubeVecs = np.append(newCubeVecs, [rotatedVec], axis=0)
         self.vecs = newCubeVecs
-        self.origin = newCubeVecs[0]
-        self.hitBoxVecs = self.findHitBoxVecs()
+        self.origin = newCubeVecs[0] #redefine origin 
+        self.hitBoxVecs = self.findHitBoxVecs() #redefine hitBoxVecs
 
+    #rotates all cube vectors around a central vector
     def rotateSelf(self, app, angle, center, rotAxis=(0,0,1)):
-
-        #make a centered copy of the cube vectors (pretend the cube is centered at the origin)
+        #make a centered copy of the cube vectors 
+        # (i.e. pretend the cube is centered at the origin)
         centeredVecs = np.empty((0,3))
         for vec in self.vecs:
             centeredVecs = np.append(centeredVecs, [vec-center], axis=0)
@@ -89,7 +88,8 @@ class Cube(object):
                 rotatedVec = vec
             else:
                 rotatedVec = rotateVec(app, vec, angle, rotAxis)
-            rotatedCenteredVecs = np.append(rotatedCenteredVecs, [rotatedVec], axis=0)
+            rotatedCenteredVecs = np.append(rotatedCenteredVecs, 
+                                            [rotatedVec], axis=0)
         
         #push the rotated vectors back to the cube's original centered position 
         rotatedVecs = np.empty((0,3))
@@ -98,14 +98,8 @@ class Cube(object):
 
         self.vecs = rotatedVecs
         self.hitBoxVecs = self.findHitBoxVecs()
-        '''
-        faceVecs = self.getFaceVecs()
-        for i in range(len(faceVecs)):
-            face = faceVecs[i]
-            coords = perspectiveRender(app, app.cameraBasis, face)
-            self.imageCoords[i] = coords
-        '''
 
+    #find the max/min coordinates in each axis that the cube lies within
     def findHitBoxVecs(self):
         xMax, yMax, zMax = self.vecs[0]
         xMin, yMin, zMin = self.vecs[0]
@@ -124,6 +118,7 @@ class Cube(object):
                 zMin = vec[2]
         return np.array([[xMax,yMax,zMax], [xMin,yMin,zMin]])
 
+    #check if mouse clicks inside the cube object
     def mouseInHitbox(self, app, event):
         #making hitBox
         l,w,h = self.length, self.width, self.height
@@ -150,6 +145,7 @@ class Cube(object):
 
         return leftX <= event.x <= rightX and topY <= event.y <= botY
 
+    #check if cube collides with another cube 
     def isCollide(self, other):
         if not isinstance(other, Cube):
             return None
@@ -166,6 +162,7 @@ class Cube(object):
         else:
             return False
         
+    #get cube vecs by the face they belong to 
     def getFaceVecs(self):
         topFaceVecs = []
         for i in self.topFaceVecs:
@@ -195,6 +192,7 @@ class Cube(object):
                 rightFrontFaceVecs, leftBackFaceVecs, 
                 rightBackFaceVecs, botFaceVecs]
 
+    #draw cube w/o excess diagonals
     def draw(self, app, canvas, color='black', fill=None):
         topFaceVecs, leftFrontFaceVecs, \
         rightFrontFaceVecs, leftBackFaceVecs, \
@@ -213,6 +211,7 @@ class Cube(object):
             canvas.create_line(r[3][0], r[3][1], r[2][0], r[2][1], fill=color)
             canvas.create_line(r[2][0],r[2][1], r[0][0], r[0][1], fill=color)
 
+    #get the perspective rendered coords of the cube
     def getImageCoords(self, app, cameraBasis):
         imageCoords = []
         faceVecs = self.getFaceVecs()
@@ -221,6 +220,7 @@ class Cube(object):
             imageCoords.append(coords)
         return imageCoords
 
+    #draw the perspective rendered coords of the cube
     def drawImageCoords(self, app, canvas, color='black'):
         imageCoords = self.getImageCoords(app, app.cameraBasis)
         for faceCoord in imageCoords:
@@ -258,10 +258,11 @@ class Table(Cube):
         self.face = Cube(l,w,th, origin = np.array([0,0,h-th]) + self.origin)
 
         self.leg1 = Cube(t,t,h-th, origin = self.origin)
-        self.leg2 = Cube(t,t,h-th, origin = self.origin + np.array([l-t, 0,0]))
-        self.leg3 = Cube(t,t,h-th, origin = self.origin + np.array([0,w-t, 0]))
-        self.leg4 = Cube(t,t,h-th, origin = self.origin + np.array([l-t, w-t,0]))
+        self.leg2 = Cube(t,t,h-th, origin = self.origin + np.array([l-t,0,0]))
+        self.leg3 = Cube(t,t,h-th, origin = self.origin + np.array([0,w-t,0]))
+        self.leg4 = Cube(t,t,h-th, origin = self.origin + np.array([l-t,w-t,0]))
 
+        #store as a collection of cubes
         self.cubes = [self.face, self.leg1, self.leg2, self.leg3, self.leg4]
 
         self.hitBox = Cube(l,w,h, origin=self.origin)
@@ -273,6 +274,7 @@ class Table(Cube):
         
         self.isClicked = False
 
+    #redefined from Cube class since a table is made up of multiple cubes 
     def getImageCoords(self, app, cameraBasis):
         imageCoords = []
         for cube in self.cubes:
@@ -282,10 +284,12 @@ class Table(Cube):
                 imageCoords.append(coords)
         return imageCoords
 
+    #redefined from Cube class since a table is made up of multiple cubes 
     def drawImageCoords(self, app, canvas, color='black'):
         for cube in self.cubes:
             cube.drawImageCoords(app,canvas,color)
 
+    #update an existing Table object (count it as the same object as before)
     def updateVecs(self):
         self = Table(self.length, self.width, self.height, 
                      origin=self.origin, tableThickness=self.tth, 
@@ -293,19 +297,23 @@ class Table(Cube):
         self.id -= 1 
         Table.currentId -=1
 
+    #redefined from Cube class since a table is made up of multiple cubes 
     def draw(self, app, canvas, color='black',fill=None):
         for cube in self.cubes:
             cube.draw(app, canvas, color)
 
+    #redefined from Cube class since a table is made up of multiple cubes 
     def rotate(self, app, angle, rotAxis=(0,0,1)):
         for i in range(len(self.cubes)):
             self.cubes[i].rotate(app, angle, rotAxis)
 
+    #redefined from Cube class since a table is made up of multiple cubes 
     def rotateSelf(self, app, angle, center, rotAxis=(0,0,1)):
         for cube in self.cubes:
             cube.rotateSelf(app, angle, center, rotAxis)
         self.hitBoxVecs = self.hitBox.findHitBoxVecs()
     
+    #redefined from Cube class since a table is made up of multiple cubes 
     def isCollide(self, other):
         if not isinstance(other, Cube):
             return None
@@ -325,11 +333,16 @@ class Chair(Table):
     currentId = 0
     def __init__(self, length, width, height, origin=(0,0,0), tableThickness=5, 
                 legThickness=3):
-        super().__init__(length, width, height/2, origin, tableThickness, legThickness)
+        super().__init__(length, width, height/2, origin, 
+                        tableThickness, legThickness)
+
         o = np.array(self.origin) + np.array([0,0,height/2])
         self.height = height
+
+        #define a chair like a table, except it has an exxtra part 
         self.back = Cube(self.tth, width, height/2, origin = o)
         self.cubes.append(self.back)
+
         self.id = Chair.currentId
         Chair.currentId+=1
         self.name = 'Chair'
@@ -351,14 +364,17 @@ class Bed(Table):
         h = self.height = height 
         self.tth = tth
         self.lth = lth
+
         self.origin = np.array(origin)
         self.center = self.origin + np.array([l/2, w/2, h/2])
+
         self.headBoard = Cube(l,w*0.2, h, self.origin)
         bodyO = self.origin + np.array([0,w*0.2,0])
         self.body = Cube(l,w*0.8,h*0.8,bodyO)
         pillowHeight = h*0.2
         pillowO = bodyO + np.array([l*.25, 0, h*0.8])
         self.pillow = Cube(l*0.5, l/2, pillowHeight, origin=pillowO)
+
         self.cubes = [self.headBoard, self.body, self.pillow]
 
         self.hitBox = Cube(l,w,h, origin=self.origin)

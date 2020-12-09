@@ -1,3 +1,9 @@
+#button
+#   - Button and MiscIcon classes for button creation w/ customized icons 
+#   - key methods: checking is mouse hovers over a button 
+#                  setting custom icons
+#                  draw
+
 import numpy as np
 import math
 from cmu_112_graphics import *
@@ -18,13 +24,14 @@ class Button(object):
         self.isPressed = False
         self.setIcon(iconName, ovec=ovec, app=app)
 
+    #checks if mouse intersects the button
     def mouseOver(self, app, event):
         ox,oy = self.origin 
         w,h = self.w, self.h
         return ox-w/2 <= event.x <= ox+w/2 and oy-h/2 <= event.y <= oy+h/2
 
     def setIcon(self, iconName, ovec=None, app=None):
-        if ovec == True:
+        if ovec == True: #if the icon uses vectors 
             ovec = graph2Vecs(app, [self.origin])[0]
 
         if iconName == 'Chair':
@@ -32,7 +39,8 @@ class Button(object):
             height = self.h - (self.padding*2)
             th = min(self.w, self.h)*0.02
             ovec[2] -= self.h*0.2
-            self.icon = [Chair(length, width, height, ovec, tableThickness = th, legThickness=th)]
+            self.icon = [Chair(length, width, height, ovec, 
+                        tableThickness = th, legThickness=th)]
             self.iconName = iconName
 
         elif iconName == 'Table':
@@ -42,7 +50,8 @@ class Button(object):
             width = self.w - (self.padding*2)*1.5 
             height = self.h - (self.padding*2)*1.5
             th = min(self.w, self.h)*0.02
-            self.icon = [Table(length, width, height, ovec, tableThickness=th, legThickness=th)]
+            self.icon = [Table(length, width, height, ovec, 
+                        tableThickness=th, legThickness=th)]
             self.iconName = iconName
 
         elif iconName == 'Bed':
@@ -60,7 +69,7 @@ class Button(object):
             th = min(self.w, self.h)*0.02
             ovec[2] -= self.h*0.2
             self.icon = [Lamp(length, width, height, ovec, 
-                                    tableThickness = th, legThickness=th)]
+                        tableThickness = th, legThickness=th)]
             self.iconName = iconName
 
         elif iconName == 'Cube':
@@ -101,7 +110,6 @@ class Button(object):
             self.icon = [MiscIcon(r, self.origin, name=iconName)]
             self.iconName = iconName
 
-        
         else:
             self.icon = None
             self.iconName = None
@@ -109,57 +117,76 @@ class Button(object):
     def draw(self, app, canvas, fillColor, lineColor):
         x, y = self.origin
         w, h = self.w, self.h
-        canvas.create_rectangle(x-w/2, y-h/2, x+w/2, y+h/2, fill=self.fillColor, width=0)
+        canvas.create_rectangle(x-w/2, y-h/2, x+w/2, y+h/2, 
+                                fill=self.fillColor, width=0)
         if self.icon!=None:
             for obj in self.icon:
                 obj.draw(app, canvas, self.lineColor, self.fillColor)
 
-class MiscIcon(object):
-    def __init__(self, radius, origin, name=None, lineColor='black', lineWidth=2, ovec=None):
+class MiscIcon(object): #each button may have a specified icon
+    def __init__(self, radius, origin, name=None, 
+                lineColor='black', lineWidth=2, ovec=None):
         self.radius = radius
         self.origin = origin
         self.name = name 
         self.lineColor = lineColor
         self.lineWidth = lineWidth
         self.ovec=ovec
+    
     def draw(self, app, canvas, lineColor, fillColor):
         ox,oy = self.origin 
         r = self.radius
         if self.name == 'Left Turn':
-            canvas.create_oval(ox-r, oy-(r*0.7), ox+r, oy+(r*0.8), fill=None, outline=lineColor, width=self.lineWidth)
-            canvas.create_arc(ox-r, oy-(r*0.7), ox+r, oy+(r*0.8), start=60, extent=-60, fill=None, outline=fillColor, width=self.lineWidth*1.8)
-            canvas.create_line(ox-r*0.2, oy-r, ox+r*0.5, oy-(r*0.7), fill=lineColor, width=self.lineWidth)
-            canvas.create_line(ox-r*0.2, oy-(r*0.3), ox+r*0.5,oy-(r*0.7), fill=lineColor, width=self.lineWidth)
+            canvas.create_oval(ox-r, oy-(r*0.7), ox+r, oy+(r*0.8), fill=None, 
+                                        outline=lineColor, width=self.lineWidth)
+            canvas.create_arc(ox-r, oy-(r*0.7), ox+r, oy+(r*0.8), start=60, 
+            extent=-60, fill=None, outline=fillColor, width=self.lineWidth*1.8)
+            canvas.create_line(ox-r*0.2, oy-r, ox+r*0.5, oy-(r*0.7), 
+                                        fill=lineColor, width=self.lineWidth)
+            canvas.create_line(ox-r*0.2, oy-(r*0.3), ox+r*0.5,oy-(r*0.7), 
+                                        fill=lineColor, width=self.lineWidth)
 
         elif self.name == 'Right Turn':
-            canvas.create_oval(ox-r, oy-(r*0.7), ox+r, oy+(r*0.8), fill=None, outline=lineColor, width=self.lineWidth)
-            canvas.create_arc(ox-r, oy-(r*0.7), ox+r, oy+(r*0.8), start=120, extent=60, fill=None, outline=fillColor, width=self.lineWidth*1.8)
-            canvas.create_line(ox-r*0.5, oy-(r*0.7), ox+r*0.2, oy-r, fill=lineColor, width=self.lineWidth)
-            canvas.create_line(ox-r*0.5, oy-(r*0.7), ox+r*0.2, oy-(r*0.3), fill=lineColor, width=self.lineWidth)
+            canvas.create_oval(ox-r, oy-(r*0.7), ox+r, oy+(r*0.8), fill=None, 
+                                        outline=lineColor, width=self.lineWidth)
+            canvas.create_arc(ox-r, oy-(r*0.7), ox+r, oy+(r*0.8), start=120, 
+            extent=60, fill=None, outline=fillColor, width=self.lineWidth*1.8)
+            canvas.create_line(ox-r*0.5, oy-(r*0.7), ox+r*0.2, oy-r, 
+                                        fill=lineColor, width=self.lineWidth)
+            canvas.create_line(ox-r*0.5, oy-(r*0.7), ox+r*0.2, oy-(r*0.3), 
+                                        fill=lineColor, width=self.lineWidth)
 
         elif self.name == 'Right Arrow':
-            canvas.create_text(ox,oy-r, text='>', fill=lineColor, font=Button.font)
-            canvas.create_text(ox,oy+r, text='g', fill=lineColor, font=Button.font)
+            canvas.create_text(ox,oy-r, text='>', fill=lineColor, 
+                                        font=Button.font)
+            canvas.create_text(ox,oy+r, text='g', fill=lineColor, 
+                                        font=Button.font)
 
         elif self.name == 'Left Arrow': 
-            canvas.create_text(ox,oy-r, text='<', fill=lineColor, font=Button.font)
-            canvas.create_text(ox,oy+r, text='f', fill=lineColor, font=Button.font)
+            canvas.create_text(ox,oy-r, text='<', fill=lineColor, 
+                                        font=Button.font)
+            canvas.create_text(ox,oy+r, text='f', fill=lineColor, 
+                                        font=Button.font)
 
         elif self.name == 'Help':
-            canvas.create_polygon(ox-r*0.2, oy-r, ox+r*0.2, oy-r, ox+r*0.1, oy+r*0.2, ox-r*0.1, oy+r*0.2, fill=lineColor, width=0)
+            canvas.create_polygon(ox-r*0.2, oy-r, ox+r*0.2, oy-r, 
+            ox+r*0.1, oy+r*0.2, ox-r*0.1, oy+r*0.2, fill=lineColor, width=0)
             cy = oy + r*0.6
             cx = ox
             cr = r*0.2
-            canvas.create_oval(cx-cr, cy-cr, cx+cr, cy+cr, fill=lineColor, width=0)
+            canvas.create_oval(cx-cr,cy-cr,cx+cr,cy+cr,fill=lineColor,width=0)
 
         elif self.name == 'Clear':
             canvas.create_oval(ox-r, oy-r, ox+r, oy+r, fill=lineColor, width=0)
             r2 = r*0.4
-            canvas.create_line(ox-r2, oy-r2, ox+r2, oy+r2, fill=fillColor, width=self.lineWidth)
-            canvas.create_line(ox-r2, oy+r2, ox+r2, oy-r2, fill=fillColor, width=self.lineWidth)
+            canvas.create_line(ox-r2, oy-r2, ox+r2, oy+r2, fill=fillColor, 
+                                                        width=self.lineWidth)
+            canvas.create_line(ox-r2, oy+r2, ox+r2, oy-r2, fill=fillColor, 
+                                                        width=self.lineWidth)
         elif self.name == 'Camera':
             sr = r*0.2
-            canvas.create_oval(ox-sr, oy-sr, ox+sr, oy+sr, fill=lineColor, outline=lineColor, width=self.lineWidth)
+            canvas.create_oval(ox-sr, oy-sr, ox+sr, oy+sr, fill=lineColor, 
+                                    outline=lineColor, width=self.lineWidth)
             
             z = np.array([[0,0,r*0.6],[0,0,-r*0.6]])
             y = np.array([[0,r*0.75,0],[0,-r*0.75,0]])
@@ -180,16 +207,24 @@ class MiscIcon(object):
                 x1,y1 = coords[i][1]
                 canvas.create_line(x0,y0,x1,y1,fill=lineColor)
                 if i==0: 
-                    canvas.create_text(x0,y0, text='z', fill=lineColor, anchor=NE, font=Button.font) #NE
-                    canvas.create_text(x1,y1, text='x', fill=lineColor, anchor=SW, font=Button.font) #SW
+                    canvas.create_text(x0,y0, text='z', fill=lineColor, 
+                                            anchor=NE, font=Button.font) #NE
+                    canvas.create_text(x1,y1, text='x', fill=lineColor, 
+                                            anchor=SW, font=Button.font) #SW
                 elif i==1: 
-                    canvas.create_text(x0,y0, text='d', fill=lineColor, anchor=NW, font=Button.font) #NW
-                    canvas.create_text(x1,y1, text='a', fill=lineColor, anchor=SE, font=Button.font) #SE
+                    canvas.create_text(x0,y0, text='d', fill=lineColor, 
+                                            anchor=NW, font=Button.font) #NW
+                    canvas.create_text(x1,y1, text='a', fill=lineColor, 
+                                            anchor=SE, font=Button.font) #SE
                 elif i==2: 
-                    canvas.create_text(x0,y0, text='w', fill=lineColor, anchor=S, font=Button.font)
-                    canvas.create_text(x1,y1, text='s', fill=lineColor, anchor=N, font=Button.font)
+                    canvas.create_text(x0,y0, text='w', fill=lineColor, 
+                                            anchor=S, font=Button.font)
+                    canvas.create_text(x1,y1, text='s', fill=lineColor, 
+                                            anchor=N, font=Button.font)
             
         elif self.name == 'Eye':
-            canvas.create_polygon(ox-r*1.2,oy, ox,oy-r, ox+r*1.2,oy, ox,oy+r, fill=lineColor, outline=lineColor, width=self.lineWidth)
+            canvas.create_polygon(ox-r*1.2,oy, ox,oy-r, ox+r*1.2,oy, ox,oy+r, 
+                        fill=lineColor, outline=lineColor, width=self.lineWidth)
             sr = r*0.5
-            canvas.create_oval(ox-sr, oy-sr, ox+sr, oy+sr, fill=fillColor, outline=lineColor, width=self.lineWidth)
+            canvas.create_oval(ox-sr, oy-sr, ox+sr, oy+sr, fill=fillColor, 
+                                        outline=lineColor, width=self.lineWidth)
