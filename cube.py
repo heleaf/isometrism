@@ -125,6 +125,32 @@ class Cube(object):
                 zMin = vec[2]
         return np.array([[xMax,yMax,zMax], [xMin,yMin,zMin]])
 
+    def mouseInHitbox(self, app, event):
+        #making hitBox
+        l,w,h = self.length, self.width, self.height
+        
+        #get leftX from this 
+        leftVec = self.origin + np.array([l,0,0])
+        leftCoord = vecs2Graph(app, [leftVec])[0]
+        leftX = leftCoord[0]
+
+        #get rightX from this 
+        rightVec = self.origin + np.array([0,w,0])
+        rightCoord = vecs2Graph(app, [rightVec])[0]
+        rightX = rightCoord[0]
+
+        #topY from this 
+        topVec = self.origin + np.array([0,0,h])
+        topCoord = vecs2Graph(app, [topVec])[0]
+        topY = topCoord[1]
+    
+        #botY from this 
+        botVec = self.origin + np.array([l,w,0])
+        botCoord = vecs2Graph(app, [botVec])[0]
+        botY = botCoord[1]
+
+        return leftX <= event.x <= rightX and topY <= event.y <= botY
+
     def isCollide(self, other):
         if not isinstance(other, Cube):
             return None
@@ -264,7 +290,6 @@ class Table(Cube):
     def drawImageCoords(self, app, canvas, color='black'):
         for cube in self.cubes:
             cube.drawImageCoords(app,canvas,color)
-
 
     def updateVecs(self):
         self = Table(self.length, self.width, self.height, 

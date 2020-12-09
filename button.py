@@ -61,7 +61,13 @@ class Button(object):
             self.icon = [floor, right, left]
             self.iconName = iconName
 
-        elif iconName == 'Left Turn' or iconName == 'Help' or iconName == 'Camera' or iconName == 'Eye':
+        elif iconName == 'Camera':
+            r = (min(self.w, self.h) - self.padding*2 )/2
+            self.icon = [MiscIcon(r, self.origin, name=iconName, ovec=ovec)]
+            self.iconName = iconName
+        
+        elif (iconName == 'Left Turn' or iconName == 'Right Turn' or 
+            iconName == 'Help' or iconName == 'Eye'):
             r = (min(self.w, self.h) - self.padding*2 )/2
             self.icon = [MiscIcon(r, self.origin, name=iconName)]
             self.iconName = iconName
@@ -79,33 +85,65 @@ class Button(object):
                 obj.draw(app, canvas, self.lineColor, self.fillColor)
 
 class MiscIcon(object):
-    def __init__(self, radius, origin, name=None, lineColor='black', lineWidth=2):
+    def __init__(self, radius, origin, name=None, lineColor='black', lineWidth=2, ovec=None):
         self.radius = radius
         self.origin = origin
         self.name = name 
         self.lineColor = lineColor
         self.lineWidth = lineWidth
-
+        self.ovec=ovec
     def draw(self, app, canvas, lineColor, fillColor):
         ox,oy = self.origin 
         r = self.radius
         if self.name == 'Left Turn':
             canvas.create_oval(ox-r, oy-(r*0.7), ox+r, oy+(r*0.8), fill=None, outline=lineColor, width=self.lineWidth)
-            canvas.create_arc(ox-r, oy-(r*0.7), ox+r, oy+(r*0.8), start=60, extent=-60, fill=None, outline=fillColor, width=self.lineWidth*1.5)
+            canvas.create_arc(ox-r, oy-(r*0.7), ox+r, oy+(r*0.8), start=60, extent=-60, fill=None, outline=fillColor, width=self.lineWidth*1.8)
             canvas.create_line(ox-r*0.2, oy-r, ox+r*0.5, oy-(r*0.7), fill=lineColor, width=self.lineWidth)
             canvas.create_line(ox-r*0.2, oy-(r*0.3), ox+r*0.5,oy-(r*0.7), fill=lineColor, width=self.lineWidth)
-
+        elif self.name == 'Right Turn':
+            canvas.create_oval(ox-r, oy-(r*0.7), ox+r, oy+(r*0.8), fill=None, outline=lineColor, width=self.lineWidth)
+            canvas.create_arc(ox-r, oy-(r*0.7), ox+r, oy+(r*0.8), start=120, extent=60, fill=None, outline=fillColor, width=self.lineWidth*1.8)
+            canvas.create_line(ox-r*0.5, oy-(r*0.7), ox+r*0.2, oy-r, fill=lineColor, width=self.lineWidth)
+            canvas.create_line(ox-r*0.5, oy-(r*0.7), ox+r*0.2, oy-(r*0.3), fill=lineColor, width=self.lineWidth)
         elif self.name == 'Help':
             canvas.create_polygon(ox-r*0.2, oy-r, ox+r*0.2, oy-r, ox+r*0.1, oy+r*0.2, ox-r*0.1, oy+r*0.2, fill=lineColor, width=0)
             cy = oy + r*0.6
             cx = ox
             cr = r*0.2
             canvas.create_oval(cx-cr, cy-cr, cx+cr, cy+cr, fill=lineColor, width=0)
-
         elif self.name == 'Camera':
-            sr = r*0.4
+            sr = r*0.2
             canvas.create_oval(ox-sr, oy-sr, ox+sr, oy+sr, fill=lineColor, outline=lineColor, width=self.lineWidth)
+            
+            z = np.array([[0,0,r*0.6],[0,0,-r*0.6]])
+            y = np.array([[0,r*0.75,0],[0,-r*0.75,0]])
+            x = np.array([[r*0.75,0,0],[-r*0.75,0,0]])
 
+            ax = [x,y,z]
+
+            for a in ax:
+                for v in a:
+                    v+=np.array(self.ovec)
+
+            coords = []
+            for a in ax:
+                coords.append(vecs2Graph(app, a))
+
+            for i in range(len(coords)):
+                x0,y0 = coords[i][0]
+                x1,y1 = coords[i][1]
+                canvas.create_line(x0,y0,x1,y1,fill=lineColor)
+                if i==0: 
+                    canvas.create_text(x0,y0, text='z', fill=lineColor, anchor=NE) #NE
+                    canvas.create_text(x1,y1, text='x', fill=lineColor, anchor=SW) #SW
+                elif i==1: 
+                    canvas.create_text(x0,y0, text='d', fill=lineColor, anchor=NW) #NW
+                    canvas.create_text(x1,y1, text='a', fill=lineColor, anchor=SE) #SE
+                elif i==2: 
+                    canvas.create_text(x0,y0, text='w', fill=lineColor, anchor=S)
+                    canvas.create_text(x1,y1, text='s', fill=lineColor, anchor=N)
+            
+        
         elif self.name == 'Eye':
             canvas.create_polygon(ox-r*1.2,oy, ox,oy-r, ox+r*1.2,oy, ox,oy+r, fill=lineColor, outline=lineColor, width=self.lineWidth)
             sr = r*0.5

@@ -1,8 +1,7 @@
 import numpy as np
 import math
 
-def deg2Rad(deg):
-    return deg*math.pi/180
+def deg2Rad(deg): return deg*math.pi/180
 
 #regular graph coordinate --> tkinter x coordinate
 def g2x(x, originX): return x+originX
@@ -10,7 +9,9 @@ def g2x(x, originX): return x+originX
 #regular graph coordinate --> tkinter y coordinate
 def g2y(y, originY): return originY-y
 
-def vecs2Graph(app, vecs): #takes in 2d ndarray of vecs [x,y,z]
+def vecs2Graph(app, vecs): 
+    #takes in 2d ndarray of vecs [x,y,z]
+    #returns a 2d ndarray of Tkinter coordinates [x,y]
     graphPoints = np.empty((0,2))
 
     for vec in vecs:
@@ -26,7 +27,9 @@ def vecs2Graph(app, vecs): #takes in 2d ndarray of vecs [x,y,z]
 
     return graphPoints
 
-def graph2Vecs(app, graph, z=0): #takes in 2d ndarray of points [x,y]
+def graph2Vecs(app, graph, z=0): 
+    #takes in 2d ndarray of TKinter coordinates [x,y]
+    #returns a 2d ndarray of vecs [x,y,z]
     ox, oy = app.origin
     vecs = np.empty((0,3))
 
@@ -71,15 +74,15 @@ def graph2Vecs(app, graph, z=0): #takes in 2d ndarray of points [x,y]
 
     return vecs
 
-def rotateVec(app, vec, angle, axis): #3D vecs? 
+def rotateVec(app, vec, angle, axis): 
+    #rotation matrix adapted from 
+    #https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/rotate3d()
+
     if angle%360 == 0:
         return vec 
 
     a = deg2Rad(angle)
     x,y,z = axis[0], axis[1], axis[2] 
-
-    #rotation matrix formula from 
-    #https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/rotate3d()
 
     #first row
     r11 = 1 + (1-math.cos(a))*(x**2 - 1)
@@ -105,18 +108,19 @@ def rotateVec(app, vec, angle, axis): #3D vecs?
     return rotatedVec
 
 def perspectiveRender(app, cameraBasis, cubeVectors): 
+    #concepts lifted from Professor Offner's 21-241 perspective rendering lectures
+
     #takes in: cameraOrigin(vector), 
     #          cameraBasis (matrix w/ columns as vectors of camera's basis)
     #          cubeVectors (matrix w/ vectors as rows)
     #returns:  matrix of coordinates to render (coordinates as rows)
 
     #get new basis of cubeVectors (matrix w/ vectors as columns)
-    #print(cubeVectors.shape)
     numVecs = cubeVectors.shape[0]
     cameraViewCubeVecs = np.linalg.inv(cameraBasis) @ cubeVectors.T
 
-    imgCoords = np.zeros((numVecs,2)) #8 rows of (x,y) coordinates for Tkinter
-    for i in range(cameraViewCubeVecs.shape[1]): # in terms of columns
+    imgCoords = np.zeros((numVecs,2)) #rows of (x,y) coordinates for Tkinter
+    for i in range(cameraViewCubeVecs.shape[1]): #loop through the vecs (columns)
         divisor = cameraViewCubeVecs[:,i][2] #the third element in the column of a vector
         cameraViewCubeVecs[:,i] *= 1/(divisor) #scale down to get points in the image plane 
         imgCoords[i] = -cameraViewCubeVecs[:2, i] #get the first two components (pixel addresses)
