@@ -123,7 +123,7 @@ class Button(object):
             for obj in self.icon:
                 obj.draw(app, canvas, self.lineColor, self.fillColor)
 
-class MiscIcon(object): #each button may have a specified icon
+class MiscIcon(object): 
     def __init__(self, radius, origin, name=None, 
                 lineColor='black', lineWidth=2, ovec=None):
         self.radius = radius

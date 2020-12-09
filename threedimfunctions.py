@@ -23,7 +23,8 @@ def vecs2Graph(app, vecs):
         #adding the horizontal components of the vectors 
         tx = vec[0]*math.cos(app.xAxisAngle) + vec[1]*(math.cos(app.yAxisAngle))
         #adding the vertical components of the vectors 
-        ty = vec[0]*math.sin(app.xAxisAngle) + vec[1]*(math.sin(app.yAxisAngle)) + vec[2]
+        ty = (vec[0]*math.sin(app.xAxisAngle) 
+            + vec[1]*(math.sin(app.yAxisAngle)) + vec[2])
         
         #offsets, since prev tx,ty consider 0,0 to be center of the screen 
         tx = g2x(tx, app.origin[0])
