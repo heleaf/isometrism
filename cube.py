@@ -235,6 +235,7 @@ class Cube(object):
 
     def __hash__(self):
         return hash(self.name, self.id)
+        
     def __repr__(self):
         return f'{self.name}: {self.id}'
 
