@@ -24,7 +24,7 @@ SHORTCUT COMMANDS:
 Note: you cannot modify the camera or the room if you are rotated out of place 
 (to reset static rotations from r and t, click the rotation arrow buttons)
 
-camera movement:
+Camera movement:
 - f: change direction of camera view (clockwise direction)
 - g: change direction of camera view (counterclockwise direction)
 - w: increase the z axis component of the camera
