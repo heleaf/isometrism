@@ -1,6 +1,6 @@
 ![test](https://i.imgur.com/hClwi7B.jpg)
 
-Users can create an isometric room, add furniture, then ‘step inside’ and look around as if they are standing inside the room. 
+Create an isometric room, add furniture, then ‘step inside’ and look around.
 
 TO RUN: run `main`, which has the following dependencies:
 - `threedimfunctions`
