@@ -1,4 +1,5 @@
 # isometrism
+![alt text](https://github.com/heleaf/isometrism/misc/banner.jpg?raw=true)
 a 2.5d room planner built for 15-112 F20
 
 Users can create an isometric room, add furniture, then ‘step inside’ and look around as if they are standing inside the room. 
